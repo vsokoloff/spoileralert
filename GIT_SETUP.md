@@ -21,7 +21,7 @@ If you already have a GitHub repository, use its URL.
 cd "/Users/vica/Spoiler Alert "
 
 # Add remote (replace with your actual GitHub URL)
-git remote add origin https://github.com/yourusername/spoiler-alert.git
+git remote add origin https://github.com/vsokoloff/spoileralert.git
 
 # Push to GitHub
 git branch -M main
