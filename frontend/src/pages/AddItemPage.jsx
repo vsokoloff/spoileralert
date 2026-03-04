@@ -80,6 +80,7 @@ function AddItemPage() {
       const input = document.createElement('input')
       input.type = 'file'
       input.accept = 'image/*'
+      input.capture = 'environment' // opens rear camera directly on mobile
       input.onchange = async (e) => {
         const file = e.target.files[0]
         if (file) {
