@@ -10,12 +10,12 @@ import EmptyState from '../components/EmptyState'
 import './FridgePage.css'
 
 const CATEGORIES = [
-  { name: 'Deli', icon: '🥓', color: '#a78bfa' },
-  { name: 'Eggs & Dairy', icon: '🥛', color: '#fbbf24' },
-  { name: 'Produce', icon: '🥬', color: '#4ade80' },
-  { name: 'Meat', icon: '🥩', color: '#f87171' },
-  { name: 'Pantry', icon: '🌾', color: '#fbbf24' },
-  { name: 'Leftovers', icon: '🍱', color: '#94a3b8' },
+  { name: 'Deli', color: '#a78bfa' },
+  { name: 'Eggs & Dairy', color: '#fbbf24' },
+  { name: 'Produce', color: '#4ade80' },
+  { name: 'Meat', color: '#f87171' },
+  { name: 'Pantry', color: '#fbbf24' },
+  { name: 'Leftovers', color: '#60a5fa' },
 ]
 
 function FridgePage() {

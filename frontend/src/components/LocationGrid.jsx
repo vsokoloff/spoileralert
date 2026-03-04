@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom'
 import './LocationGrid.css'
 
 const LOCATIONS = [
-  { name: 'Fridge', icon: '🧊', color: '#60a5fa' },
-  { name: 'Freezer', icon: '❄️', color: '#3b82f6' },
-  { name: 'Pantry', icon: '🥫', color: '#fbbf24' },
+  { name: 'Fridge', color: '#60a5fa' },
+  { name: 'Freezer', color: '#3b82f6' },
+  { name: 'Pantry', color: '#fbbf24' },
 ]
 
 function LocationGrid({ locationCounts, onLocationClick }) {
@@ -27,7 +27,6 @@ function LocationGrid({ locationCounts, onLocationClick }) {
               borderColor: location.color
             }}
           >
-            <div className="location-icon">{location.icon}</div>
             <div className="location-name">{location.name}</div>
             {count > 0 && (
               <div className="location-count">{count} items</div>

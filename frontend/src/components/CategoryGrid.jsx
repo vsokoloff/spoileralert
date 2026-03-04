@@ -20,7 +20,6 @@ function CategoryGrid({ categories, categoryCounts, onCategoryClick }) {
               borderColor: category.color
             }}
           >
-            <div className="category-icon">{category.icon}</div>
             <div className="category-name">{category.name}</div>
             {count > 0 && (
               <div className="category-count">{count} items</div>

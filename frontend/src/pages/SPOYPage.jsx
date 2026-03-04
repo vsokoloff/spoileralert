@@ -84,7 +84,7 @@ function SPOYPage() {
         </button>
         <div className="spoy-title">
           <h1>SPOY</h1>
-          <p className="subtitle">Your AI Recipe Assistant</p>
+          <p className="subtitle">Recipe Assistant</p>
         </div>
         <div style={{ width: 24 }} />
       </header>
@@ -92,8 +92,7 @@ function SPOYPage() {
       <div className="messages-container">
         {autoLoading && messages.length === 0 && (
           <div className="welcome-message">
-            <p>👋 Hi! I'm SPOY, your recipe assistant.</p>
-            <p>Checking what's expiring soon...</p>
+            <p>👋 Hi! I'm SPOY, your recipe assistant. Checking what's expiring soon...</p>
             <span className="typing-indicator">
               <span></span><span></span><span></span>
             </span>
@@ -102,8 +101,7 @@ function SPOYPage() {
         
         {!autoLoading && messages.length === 0 && (
           <div className="welcome-message">
-            <p>👋 Hi! I'm SPOY, your recipe assistant.</p>
-            <p>Ask me for recipe suggestions based on what's in your fridge!</p>
+            <p>Get recipe suggestions based on what's in your fridge.</p>
             <p className="example">Try: "What can I make with eggs and feta?"</p>
           </div>
         )}

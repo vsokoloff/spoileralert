@@ -28,7 +28,7 @@ class ErrorBoundary extends React.Component {
           justifyContent: 'center',
           alignItems: 'center'
         }}>
-          <h1 style={{ marginBottom: '20px' }}>⚠️ Something went wrong</h1>
+          <h1 style={{ marginBottom: '20px' }}>Something went wrong</h1>
           <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>
             {this.state.error?.message || 'An error occurred'}
           </p>

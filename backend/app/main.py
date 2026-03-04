@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 from app.database import engine, Base
 from app.routers import items, categories, receipt, spoy, users, notifications, roommates
 
@@ -9,9 +10,16 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Spoiler Alert API", version="1.0.0")
 
 # CORS middleware
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    os.getenv("FRONTEND_URL", ""),  # Production frontend URL
+]
+allowed_origins = [origin for origin in allowed_origins if origin]  # Remove empty strings
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -8,7 +8,7 @@ export const getCategoryColor = (category) => {
     'Pantry': '#fbbf24',
     'Deli': '#a78bfa',
     'Eggs & Dairy': '#fbbf24',
-    'Leftovers': '#94a3b8',
+    'Leftovers': '#60a5fa',
   }
   return colors[category] || '#6b7280'
 }

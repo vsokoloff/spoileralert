@@ -83,7 +83,7 @@ function InventoryPreview({ items, totalCount, onViewAll }) {
                     className="tag-status" 
                     style={{ color: `var(--${statusColor})` }}
                   >
-                    ⚠️
+                    Urgent
                   </span>
                 </div>
               )
@@ -116,7 +116,7 @@ function InventoryPreview({ items, totalCount, onViewAll }) {
                     className="tag-status" 
                     style={{ color: `var(--${statusColor})` }}
                   >
-                    ⚡
+                    Soon
                   </span>
                 </div>
               )
@@ -149,7 +149,7 @@ function InventoryPreview({ items, totalCount, onViewAll }) {
                     className="tag-status" 
                     style={{ color: `var(--${statusColor})` }}
                   >
-                    ✓
+                    Good
                   </span>
                 </div>
               )
