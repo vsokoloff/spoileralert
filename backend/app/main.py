@@ -17,6 +17,10 @@ allowed_origins = [
 ]
 allowed_origins = [origin for origin in allowed_origins if origin]  # Remove empty strings
 
+# In production, allow all origins if FRONTEND_URL not set (for MVP flexibility)
+if os.getenv("ENVIRONMENT") == "production" and not os.getenv("FRONTEND_URL"):
+    allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
