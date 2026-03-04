@@ -91,7 +91,12 @@ Keep responses concise and friendly. Format as a helpful message starting with a
                 suggested_items=expiring_names[:3]
             )
         
-        client = OpenAI(api_key=api_key)
+        # Initialize OpenAI client without proxies (Render may have proxy env vars)
+        client = OpenAI(
+            api_key=api_key,
+            timeout=30.0,
+            max_retries=2
+        )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -158,7 +163,12 @@ Keep responses concise and friendly. If the user asks about items not in their f
                 suggested_items=[item["name"] for item in expiring_soon[:3]]
             )
         
-        client = OpenAI(api_key=api_key)
+        # Initialize OpenAI client without proxies (Render may have proxy env vars)
+        client = OpenAI(
+            api_key=api_key,
+            timeout=30.0,
+            max_retries=2
+        )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[

@@ -24,7 +24,12 @@ def scan_receipt_with_openai(image_base64: str) -> List[dict]:
             {"name": "Eggs", "quantity": 1, "category": "Eggs & Dairy", "location": "fridge"},
         ]
 
-    client = OpenAI(api_key=api_key)
+    # Initialize OpenAI client without proxies (Render may have proxy env vars)
+    client = OpenAI(
+        api_key=api_key,
+        timeout=30.0,
+        max_retries=2
+    )
 
     prompt = """Look at this receipt image and extract all food/grocery items.
 Return ONLY a JSON array with this exact format, nothing else:
