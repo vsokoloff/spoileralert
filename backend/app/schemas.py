@@ -1,7 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 from app.models import CategoryType, LocationType
+
+# Map old category names to new ones (for DB migration safety)
+CATEGORY_ALIASES = {
+    "Pantry": "Shelf Staples",
+}
 
 class ItemBase(BaseModel):
     name: str
@@ -11,6 +16,13 @@ class ItemBase(BaseModel):
     location: LocationType
     purchase_date: Optional[datetime] = None
     consumed: bool = False
+
+    @field_validator('category', mode='before')
+    @classmethod
+    def normalize_category(cls, v):
+        if isinstance(v, str):
+            v = CATEGORY_ALIASES.get(v, v)
+        return v
 
 class ItemCreate(ItemBase):
     pass

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { getCategoryColor, getStatusColor } from '../utils/colors'
+import { getStatusColor } from '../utils/colors'
 import { differenceInDays } from 'date-fns'
 import './InventoryPreview.css'
 
@@ -59,101 +59,44 @@ function InventoryPreview({ items, totalCount, onViewAll }) {
         {moreCount > 0 && <span className="more-count">+{moreCount} more</span>}
       </div>
       
-      {/* Expiring Soon (Red) */}
+      {/* Expiring Soon */}
       {urgentItems.length > 0 && (
         <div className="preview-section">
           <div className="section-label">Expiring Soon</div>
           <div className="preview-tags">
-            {urgentItems.map((item) => {
-              const categoryColor = getCategoryColor(item.category)
-              const statusColor = getStatusColor(item.expiration_date, item.location)
-              
-              return (
-                <div
-                  key={item.id}
-                  className="preview-tag"
-                  style={{
-                    backgroundColor: `${categoryColor}20`,
-                    borderColor: categoryColor,
-                    borderLeft: `4px solid ${categoryColor}`
-                  }}
-                >
-                  <span className="tag-name">{item.name}</span>
-                  <span 
-                    className="tag-status" 
-                    style={{ color: `var(--${statusColor})` }}
-                  >
-                    Urgent
-                  </span>
-                </div>
-              )
-            })}
+            {urgentItems.map((item) => (
+              <div key={item.id} className="preview-tag">
+                <span className="tag-name">{item.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Expiring This Week (Yellow) */}
+      {/* Expiring This Week */}
       {soonItems.length > 0 && (
         <div className="preview-section">
           <div className="section-label">Expiring This Week</div>
           <div className="preview-tags">
-            {soonItems.map((item) => {
-              const categoryColor = getCategoryColor(item.category)
-              const statusColor = getStatusColor(item.expiration_date, item.location)
-              
-              return (
-                <div
-                  key={item.id}
-                  className="preview-tag"
-                  style={{
-                    backgroundColor: `${categoryColor}20`,
-                    borderColor: categoryColor,
-                    borderLeft: `4px solid ${categoryColor}`
-                  }}
-                >
-                  <span className="tag-name">{item.name}</span>
-                  <span 
-                    className="tag-status" 
-                    style={{ color: `var(--${statusColor})` }}
-                  >
-                    Soon
-                  </span>
-                </div>
-              )
-            })}
+            {soonItems.map((item) => (
+              <div key={item.id} className="preview-tag">
+                <span className="tag-name">{item.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Still Good (Green/Blue/Black) */}
+      {/* Still Good */}
       {goodItems.length > 0 && (
         <div className="preview-section">
           <div className="section-label">Still Good</div>
           <div className="preview-tags">
-            {goodItems.map((item) => {
-              const categoryColor = getCategoryColor(item.category)
-              const statusColor = getStatusColor(item.expiration_date, item.location)
-              
-              return (
-                <div
-                  key={item.id}
-                  className="preview-tag"
-                  style={{
-                    backgroundColor: `${categoryColor}20`,
-                    borderColor: categoryColor,
-                    borderLeft: `4px solid ${categoryColor}`
-                  }}
-                >
-                  <span className="tag-name">{item.name}</span>
-                  <span 
-                    className="tag-status" 
-                    style={{ color: `var(--${statusColor})` }}
-                  >
-                    Good
-                  </span>
-                </div>
-              )
-            })}
+            {goodItems.map((item) => (
+              <div key={item.id} className="preview-tag">
+                <span className="tag-name">{item.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

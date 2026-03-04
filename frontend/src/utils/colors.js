@@ -5,7 +5,7 @@ export const getCategoryColor = (category) => {
     'Produce': '#4ade80',
     'Freezer': '#60a5fa',
     'Meat': '#f87171',
-    'Pantry': '#fbbf24',
+    'Shelf Staples': '#fbbf24',
     'Deli': '#a78bfa',
     'Eggs & Dairy': '#fbbf24',
     'Leftovers': '#60a5fa',

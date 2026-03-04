@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getItem, updateItem } from '../api/items'
 import './AddItemPage.css' // Reuse AddItemPage styles
 
-const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
+const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Shelf Staples', 'Meat', 'Leftovers']
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 function EditItemPage() {

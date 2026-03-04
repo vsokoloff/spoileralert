@@ -5,7 +5,7 @@ import { createItem } from '../api/items'
 import { scanReceipt, confirmReceiptItems } from '../api/receipt'
 import './AddItemPage.css'
 
-const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
+const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Shelf Staples', 'Meat', 'Leftovers']
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 function AddItemPage() {

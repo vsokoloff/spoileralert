@@ -63,7 +63,7 @@
 .section-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--green);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -76,24 +76,16 @@
 }
 
 .preview-tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  transition: transform 0.2s;
-}
-
-.preview-tag:hover {
-  transform: scale(1.05);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
 }
 
 .tag-name {
   color: var(--text-primary);
   font-weight: 500;
-}
-
-.tag-status {
-  font-size: 16px;
 }

@@ -40,7 +40,7 @@ Return ONLY a JSON array with this exact format, nothing else:
 
 Rules:
 - Only include food/grocery items, skip non-food items
-- Categories must be one of: Deli, Eggs & Dairy, Produce, Freezer, Pantry, Meat, Leftovers
+- Categories must be one of: Deli, Eggs & Dairy, Produce, Freezer, Shelf Staples, Meat, Leftovers
 - Location must be one of: fridge, freezer, pantry
 - Use logical defaults (e.g. frozen items → freezer, rice/pasta → pantry, fresh produce → fridge)
 - Clean up item names (remove price, weight, store codes)

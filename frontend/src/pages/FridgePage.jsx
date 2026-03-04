@@ -14,7 +14,7 @@ const CATEGORIES = [
   { name: 'Eggs & Dairy', color: '#fbbf24' },
   { name: 'Produce', color: '#4ade80' },
   { name: 'Meat', color: '#f87171' },
-  { name: 'Pantry', color: '#fbbf24' },
+  { name: 'Shelf Staples', color: '#fbbf24' },
   { name: 'Leftovers', color: '#60a5fa' },
 ]
 

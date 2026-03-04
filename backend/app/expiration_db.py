@@ -57,7 +57,7 @@ EXPIRATION_DATABASE: Dict[str, int] = {
     "turkey breast": 5,
     "salami": 7,
     
-    # Pantry/Grains
+    # Shelf Staples/Grains
     "rice": 180,  # 6 months
     "pasta": 365,  # 1 year
     "flour": 365,
@@ -110,7 +110,7 @@ def get_expiration_date(item_name: str, purchase_date: Optional[datetime] = None
     if location == LocationType.FREEZER:
         shelf_life_days *= 3  # Freezer extends shelf life 3x
     elif location == LocationType.PANTRY:
-        # Pantry items typically last longer
+            # Shelf Staples items typically last longer
         if shelf_life_days < 30:
             shelf_life_days = 30  # Minimum 30 days for pantry
     
