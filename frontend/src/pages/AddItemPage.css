@@ -1,9 +1,10 @@
 /* --- Editable Scanned Items CSS --- */
 .scanned-item.editable {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .scanned-item-header {
@@ -23,38 +24,17 @@
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px;
   color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
 }
 
 .edit-input:focus {
   border-color: var(--accent);
 }
 
-.name-input {
-  flex: 1;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.qty-input {
-  width: 60px;
-  text-align: center;
-}
-
-.select-input {
-  flex: 1;
-  padding: 8px;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
-  padding-right: 28px;
-}
+.name-input { flex: 1; font-weight: bold; }
+.qty-input { width: 50px; }
+.select-input { flex: 1; }
 
 .remove-item-btn {
   background: none;
@@ -76,11 +56,8 @@
 .action-buttons {
   display: flex;
   gap: 12px;
-  position: sticky;
-  bottom: 0px; 
-  background: var(--bg-primary);
-  padding: 20px 0;
-  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-bottom: 100px; /* Push it up so it's not hidden by toolbar */
 }
 
 .action-buttons .btn:disabled {
