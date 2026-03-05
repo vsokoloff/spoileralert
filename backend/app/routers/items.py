@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
 from app import models, schemas
-from app.expiration_db import get_color_code
+# ADDED imports for auto-categorization and expiration logic
+from app.expiration_db import get_color_code, get_expiration_date, categorize_item
 from datetime import datetime
 
 router = APIRouter()
@@ -48,12 +49,33 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.ItemResponse)
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-    """Create a new item"""
+    """Create a new item with auto-categorization and expiration"""
     try:
-        item_dict = item.dict()
-        # Ensure category and location are proper enum values
-        if isinstance(item_dict.get('category'), str):
+        # exclude_unset ensures we don't get None values for omitted fields
+        item_dict = item.dict(exclude_unset=True)
+        
+        # 1. Auto-Categorize if missing
+        if 'category' not in item_dict or item_dict['category'] is None:
+            item_dict['category'] = categorize_item(item_dict['name'])
+        elif isinstance(item_dict.get('category'), str):
             item_dict['category'] = models.CategoryType(item_dict['category'])
+
+        # 2. Auto-Compute Expiration Date if missing
+        if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
+            purchase_date = item_dict.get('purchase_date') or datetime.now()
+            
+            # ensure location is the enum for the helper function
+            loc = item_dict.get('location', models.LocationType.FRIDGE)
+            if isinstance(loc, str):
+                loc = models.LocationType(loc.lower())
+                
+            item_dict['expiration_date'] = get_expiration_date(
+                item_name=item_dict['name'], 
+                purchase_date=purchase_date, 
+                location=loc
+            )
+
+        # Handle location string to enum fallback before saving
         if isinstance(item_dict.get('location'), str):
             item_dict['location'] = models.LocationType(item_dict['location'].lower())
         

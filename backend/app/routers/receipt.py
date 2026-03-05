@@ -130,22 +130,47 @@ def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_
 @router.post("/scan/confirm")
 def confirm_receipt_items(items: List[schemas.ItemCreate], db: Session = Depends(get_db)):
     """Confirm and save items from receipt scan"""
-    created_items = []
-    for item_data in items:
-        # Calculate expiration if not provided
-        if not item_data.expiration_date:
-            item_data.expiration_date = get_expiration_date(
-                item_data.name,
-                item_data.purchase_date or datetime.now(),
-                item_data.location
-            )
+    try:
+        created_items = []
+        for item_data in items:
+            # exclude_unset ensures we don't get None values for omitted fields
+            item_dict = item_data.dict(exclude_unset=True)
 
-        db_item = models.Item(**item_data.dict(), user_id=DEFAULT_USER_ID)
-        db.add(db_item)
-        created_items.append(db_item)
+            # 1. Auto-Categorize if missing
+            if 'category' not in item_dict or item_dict['category'] is None:
+                item_dict['category'] = categorize_item(item_dict['name'])
+            elif isinstance(item_dict.get('category'), str):
+                item_dict['category'] = models.CategoryType(item_dict['category'])
 
-    db.commit()
-    for item in created_items:
-        db.refresh(item)
+            # 2. Auto-Compute Expiration Date if missing
+            if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
+                purchase_date = item_dict.get('purchase_date') or datetime.now()
+                
+                # ensure location is the enum for the helper function
+                loc = item_dict.get('location', models.LocationType.FRIDGE)
+                if isinstance(loc, str):
+                    loc = models.LocationType(loc.lower())
+                    
+                item_dict['expiration_date'] = get_expiration_date(
+                    item_name=item_dict['name'], 
+                    purchase_date=purchase_date, 
+                    location=loc
+                )
 
-    return {"message": f"Created {len(created_items)} items", "items": created_items}
+            # Handle location string to enum fallback before saving
+            if isinstance(item_dict.get('location'), str):
+                item_dict['location'] = models.LocationType(item_dict['location'].lower())
+
+            db_item = models.Item(**item_dict, user_id=DEFAULT_USER_ID)
+            db.add(db_item)
+            created_items.append(db_item)
+
+        db.commit()
+        for item in created_items:
+            db.refresh(item)
+
+        return {"message": f"Created {len(created_items)} items", "items": created_items}
+    
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error saving scanned items: {str(e)}")

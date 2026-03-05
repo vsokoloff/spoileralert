@@ -59,47 +59,57 @@ function InventoryPreview({ items, totalCount, onViewAll }) {
         {moreCount > 0 && <span className="more-count">+{moreCount} more</span>}
       </div>
       
-      {/* Expiring Soon */}
-      {urgentItems.length > 0 && (
-        <div className="preview-section">
-          <div className="section-label">Expiring Soon</div>
-          <div className="preview-tags">
-            {urgentItems.map((item) => (
-              <div key={item.id} className="preview-tag">
-                <span className="tag-name">{item.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Color Legend */}
+      <div className="color-legend">
+        <span className="legend-item"><span className="dot red"></span> Expiring (&lt;3 days)</span>
+        <span className="legend-item"><span className="dot yellow"></span> Soon (4-7 days)</span>
+        <span className="legend-item"><span className="dot green"></span> Good (7+ days)</span>
+      </div>
 
-      {/* Expiring This Week */}
-      {soonItems.length > 0 && (
-        <div className="preview-section">
-          <div className="section-label">Expiring This Week</div>
-          <div className="preview-tags">
-            {soonItems.map((item) => (
-              <div key={item.id} className="preview-tag">
-                <span className="tag-name">{item.name}</span>
-              </div>
-            ))}
+      {/* Scrollable Area */}
+      <div className="preview-scroll-area">
+        {/* Expiring Soon */}
+        {urgentItems.length > 0 && (
+          <div className="preview-section">
+            <div className="section-label">Expiring Soon</div>
+            <div className="preview-tags">
+              {urgentItems.map((item) => (
+                <div key={item.id} className="preview-tag red">
+                  <span className="tag-name">{item.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Still Good */}
-      {goodItems.length > 0 && (
-        <div className="preview-section">
-          <div className="section-label">Still Good</div>
-          <div className="preview-tags">
-            {goodItems.map((item) => (
-              <div key={item.id} className="preview-tag">
-                <span className="tag-name">{item.name}</span>
-              </div>
-            ))}
+        {/* Expiring This Week */}
+        {soonItems.length > 0 && (
+          <div className="preview-section">
+            <div className="section-label">Expiring This Week</div>
+            <div className="preview-tags">
+              {soonItems.map((item) => (
+                <div key={item.id} className="preview-tag yellow">
+                  <span className="tag-name">{item.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Still Good */}
+        {goodItems.length > 0 && (
+          <div className="preview-section">
+            <div className="section-label">Still Good</div>
+            <div className="preview-tags">
+              {goodItems.map((item) => (
+                <div key={item.id} className="preview-tag green">
+                  <span className="tag-name">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -26,40 +26,36 @@ function AddItemPage() {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'quantity' ? parseFloat(value) || 1 : value
+      // Allow empty string for quantity so the user can backspace the "1"
+      [name]: name === 'quantity' ? (value === '' ? '' : value) : value
     }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      // Format dates properly
-      let expirationDate = formData.expiration_date
-      if (!expirationDate) {
-        // Default to 7 days from now
-        const date = new Date()
-        date.setDate(date.getDate() + 7)
-        expirationDate = date.toISOString().split('T')[0] + 'T00:00:00Z'
-      } else {
-        // Convert date input (YYYY-MM-DD) to ISO string
-        expirationDate = new Date(expirationDate + 'T00:00:00').toISOString()
+      // 1. Only format expirationDate IF the user actually typed one in
+      let expirationDate = undefined;
+      if (formData.expiration_date) {
+        expirationDate = new Date(formData.expiration_date + 'T00:00:00').toISOString()
       }
       
-      let purchaseDate = formData.purchase_date
-      if (purchaseDate) {
-        purchaseDate = new Date(purchaseDate + 'T00:00:00').toISOString()
-      } else {
-        purchaseDate = new Date().toISOString()
-      }
+      let purchaseDate = formData.purchase_date 
+        ? new Date(formData.purchase_date + 'T00:00:00').toISOString() 
+        : new Date().toISOString()
       
       const itemData = {
         name: formData.name,
         quantity: parseFloat(formData.quantity) || 1.0,
         category: formData.category,
         location: formData.location,
-        expiration_date: expirationDate,
         purchase_date: purchaseDate,
         consumed: false,
+      }
+      
+      // 2. Only attach it to the payload if it exists
+      if (expirationDate) {
+         itemData.expiration_date = expirationDate;
       }
       
       console.log('Submitting item:', itemData)
@@ -112,7 +108,8 @@ function AddItemPage() {
     try {
       const items = scannedItems.map(item => ({
         ...item,
-        expiration_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        // We REMOVED the hardcoded 7-day fallback here! 
+        // The backend will now intercept this and calculate it properly.
         purchase_date: new Date().toISOString(),
         consumed: false,
       }))
@@ -138,13 +135,13 @@ function AddItemPage() {
         <div className="add-content">
           <div className="mode-selector">
             <button 
-              className="mode-btn scan"
+              className={`mode-btn scan ${scanning ? 'scanning' : ''}`}
               onClick={handleScanReceipt}
               disabled={scanning}
             >
               <Camera size={32} />
-              <span>Scan Receipt</span>
-              {scanning && <span className="loading-text">Scanning...</span>}
+              <span>{scanning ? 'AI is reading receipt...' : 'Scan Receipt'}</span>
+              {scanning && <div className="loading-subtitle" style={{fontSize: '12px', marginTop: '4px', color: '#666'}}>This may take a few seconds</div>}
             </button>
             <button 
               className="mode-btn manual"

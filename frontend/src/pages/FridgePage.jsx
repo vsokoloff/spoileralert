@@ -105,7 +105,8 @@ function FridgePage() {
         />
 
         <div className="category-section">
-          <div className="category-section-title">Categories</div>
+          {/* Changed text from 'Categories' to clarify its purpose */}
+          <div className="category-section-title">Filter Inventory by Category</div>
           <CategoryGrid 
             categories={CATEGORIES}
             categoryCounts={categories}

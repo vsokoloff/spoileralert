@@ -8,14 +8,18 @@ CATEGORY_ALIASES = {
     "Pantry": "Shelf Staples",
 }
 
+# 1. Remove category and expiration_date from the base model
 class ItemBase(BaseModel):
     name: str
-    expiration_date: datetime
     quantity: float = 1.0
-    category: CategoryType
     location: LocationType
     purchase_date: Optional[datetime] = None
     consumed: bool = False
+
+# 2. Make them Optional for creation so the frontend doesn't have to send them
+class ItemCreate(ItemBase):
+    category: Optional[CategoryType] = None
+    expiration_date: Optional[datetime] = None
 
     @field_validator('category', mode='before')
     @classmethod
@@ -23,9 +27,6 @@ class ItemBase(BaseModel):
         if isinstance(v, str):
             v = CATEGORY_ALIASES.get(v, v)
         return v
-
-class ItemCreate(ItemBase):
-    pass
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
@@ -36,9 +37,12 @@ class ItemUpdate(BaseModel):
     purchase_date: Optional[datetime] = None
     consumed: Optional[bool] = None
 
+# 3. Make them required in the Response so the frontend always receives them
 class ItemResponse(ItemBase):
     id: int
     user_id: int
+    category: CategoryType
+    expiration_date: datetime
     created_at: datetime
     updated_at: Optional[datetime] = None
     

@@ -15,6 +15,7 @@
   font-size: 28px;
   font-weight: 600;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .fridge-content {
@@ -44,4 +45,30 @@
   align-items: center;
   min-height: 100vh;
   color: var(--text-secondary);
+}
+
+.category-section {
+  margin-top: 24px;
+}
+
+.category-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+/* ==========================================================
+   Category Grid Font Size Increase 
+   (Targets elements inside CategoryGrid.jsx from this page)
+   ========================================================== */
+
+.category-card {
+  padding: 16px 12px !important;
+}
+
+.category-card span,
+.category-name {
+  font-size: 14px !important;
+  font-weight: 600;
 }

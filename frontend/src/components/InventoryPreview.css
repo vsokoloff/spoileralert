@@ -38,13 +38,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .preview-header h2 {
   font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .more-count {
@@ -63,7 +64,7 @@
 .section-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--green);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -79,7 +80,7 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 13px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
@@ -89,3 +90,51 @@
   color: var(--text-primary);
   font-weight: 500;
 }
+
+/* Scroll Area */
+.preview-scroll-area {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Custom Scrollbar for the preview */
+.preview-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+.preview-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* Color Legend */
+.color-legend {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+/* Dynamic Tag Colors */
+.preview-tag.red { border-left: 4px solid #ef4444; }
+.preview-tag.yellow { border-left: 4px solid #f59e0b; }
+.preview-tag.green { border-left: 4px solid #10b981; }
