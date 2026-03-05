@@ -3,12 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 from app.models import CategoryType, LocationType
 
-# Map old category names to new ones (for DB migration safety)
-CATEGORY_ALIASES = {
-}
-
-# 1. Remove category and expiration_date from the base model
-
+CATEGORY_ALIASES = {}
 
 class ItemBase(BaseModel):
     name: str
@@ -18,17 +13,17 @@ class ItemBase(BaseModel):
     location: LocationType
     purchase_date: Optional[datetime] = None
     consumed: bool = False
+    shared_with: Optional[str] = None  # FIX: added to base so all subclasses inherit it
 
     @field_validator('category', mode='before')
     @classmethod
     def normalize_category(cls, v):
-        # Simply return the value or handle minor variations if needed
         return v
 
-# 2. Make them Optional for creation so the frontend doesn't have to send them
 class ItemCreate(ItemBase):
     category: Optional[CategoryType] = None
     expiration_date: Optional[datetime] = None
+    shared_with: Optional[str] = None  # explicit to make it clear it's optional on create
 
     @field_validator('category', mode='before')
     @classmethod
@@ -45,8 +40,8 @@ class ItemUpdate(BaseModel):
     location: Optional[LocationType] = None
     purchase_date: Optional[datetime] = None
     consumed: Optional[bool] = None
+    shared_with: Optional[str] = None  # FIX: was missing, so edits to shared_with were silently dropped
 
-# 3. Make them required in the Response so the frontend always receives them
 class ItemResponse(ItemBase):
     id: int
     user_id: int
@@ -54,7 +49,7 @@ class ItemResponse(ItemBase):
     expiration_date: datetime
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -68,7 +63,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -101,6 +96,6 @@ class NotificationResponse(BaseModel):
     read: bool
     created_at: datetime
     item_id: Optional[int] = None
-    
+
     class Config:
         from_attributes = True

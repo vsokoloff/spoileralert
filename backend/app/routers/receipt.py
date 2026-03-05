@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import base64
 import os
 import json
 from openai import OpenAI
@@ -14,23 +13,63 @@ router = APIRouter()
 
 DEFAULT_USER_ID = 1
 
+# FIX: Map any reasonable GPT output to a valid CategoryType value.
+# GPT sometimes returns "Shelf Staples", "Dairy", "Grain", etc.
+CATEGORY_NORMALIZE_MAP = {
+    "shelf staples": models.CategoryType.PANTRY,
+    "shelf staple": models.CategoryType.PANTRY,
+    "pantry": models.CategoryType.PANTRY,
+    "grains": models.CategoryType.PANTRY,
+    "grain": models.CategoryType.PANTRY,
+    "dairy": models.CategoryType.EGGS_DAIRY,
+    "eggs & dairy": models.CategoryType.EGGS_DAIRY,
+    "eggs and dairy": models.CategoryType.EGGS_DAIRY,
+    "eggs": models.CategoryType.EGGS_DAIRY,
+    "produce": models.CategoryType.PRODUCE,
+    "vegetables": models.CategoryType.PRODUCE,
+    "fruits": models.CategoryType.PRODUCE,
+    "fruit": models.CategoryType.PRODUCE,
+    "vegetable": models.CategoryType.PRODUCE,
+    "meat": models.CategoryType.MEAT,
+    "poultry": models.CategoryType.MEAT,
+    "seafood": models.CategoryType.MEAT,
+    "fish": models.CategoryType.MEAT,
+    "deli": models.CategoryType.DELI,
+    "cold cuts": models.CategoryType.DELI,
+    "freezer": models.CategoryType.FREEZER,
+    "frozen": models.CategoryType.FREEZER,
+    "leftovers": models.CategoryType.LEFTOVERS,
+    "leftover": models.CategoryType.LEFTOVERS,
+}
+
+def normalize_category(raw: str, item_name: str) -> models.CategoryType:
+    """Safely convert GPT category string to a valid CategoryType enum."""
+    if not raw:
+        return categorize_item(item_name)
+    normalized = raw.strip().lower()
+    if normalized in CATEGORY_NORMALIZE_MAP:
+        return CATEGORY_NORMALIZE_MAP[normalized]
+    # Try direct enum match
+    for cat in models.CategoryType:
+        if cat.value.lower() == normalized:
+            return cat
+    # Final fallback: auto-categorize by item name
+    print(f"Unknown category '{raw}' for item '{item_name}', auto-categorizing.")
+    return categorize_item(item_name)
+
+
 def scan_receipt_with_openai(image_base64: str) -> List[dict]:
     """Use OpenAI GPT-4o vision to scan receipt and extract food items"""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        # Fallback mock data if no API key
         return [
             {"name": "Milk", "quantity": 1, "category": "Eggs & Dairy", "location": "fridge"},
             {"name": "Eggs", "quantity": 1, "category": "Eggs & Dairy", "location": "fridge"},
         ]
 
-    # Initialize OpenAI client without proxies (Render may have proxy env vars)
-    client = OpenAI(
-        api_key=api_key,
-        timeout=30.0,
-        max_retries=2
-    )
+    client = OpenAI(api_key=api_key, timeout=30.0, max_retries=2)
 
+    # FIX: Categories in the prompt now exactly match CategoryType enum values.
     prompt = """Look at this receipt image and extract all food/grocery items.
 Return ONLY a JSON array with this exact format, nothing else:
 [
@@ -40,12 +79,12 @@ Return ONLY a JSON array with this exact format, nothing else:
 
 Rules:
 - Only include food/grocery items, skip non-food items
-- Categories must be one of: Deli, Eggs & Dairy, Produce, Freezer, Shelf Staples, Meat, Leftovers
-- Location must be one of: fridge, freezer, pantry
-- Use logical defaults (e.g. frozen items → freezer, rice/pasta → pantry, fresh produce → fridge)
+- Categories MUST be exactly one of: Deli, Eggs & Dairy, Produce, Freezer, Pantry, Meat, Leftovers
+- Location must be exactly one of: fridge, freezer, pantry
+- Use logical defaults (frozen items → freezer, rice/pasta/canned goods → pantry, fresh produce/meat/dairy → fridge)
 - Clean up item names (remove price, weight, store codes)
 - quantity should be a number (default 1 if unclear)
-- Return valid JSON only, no extra text"""
+- Return valid JSON only, no markdown, no extra text"""
 
     try:
         response = client.chat.completions.create(
@@ -96,15 +135,16 @@ def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_
 
         items = []
         for raw in raw_items:
-            name = raw.get("name", "Unknown Item").strip()
+            name = raw.get("name", "").strip()
             if not name:
                 continue
 
             quantity = float(raw.get("quantity", 1))
-            category = raw.get("category", categorize_item(name))
-            location_str = raw.get("location", "fridge").lower()
 
-            # Map location string to enum
+            # FIX: Use normalize_category instead of raw string pass-through
+            category = normalize_category(raw.get("category", ""), name)
+
+            location_str = raw.get("location", "fridge").lower()
             location_map = {
                 "fridge": models.LocationType.FRIDGE,
                 "freezer": models.LocationType.FREEZER,
@@ -124,6 +164,7 @@ def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_
             confidence=0.95
         )
     except Exception as e:
+        print(f"scan_receipt error: {e}")
         raise HTTPException(status_code=500, detail=f"Error scanning receipt: {str(e)}")
 
 
@@ -133,31 +174,27 @@ def confirm_receipt_items(items: List[schemas.ItemCreate], db: Session = Depends
     try:
         created_items = []
         for item_data in items:
-            # exclude_unset ensures we don't get None values for omitted fields
             item_dict = item_data.dict(exclude_unset=True)
 
-            # 1. Auto-Categorize if missing
+            # Auto-categorize if missing
             if 'category' not in item_dict or item_dict['category'] is None:
                 item_dict['category'] = categorize_item(item_dict['name'])
             elif isinstance(item_dict.get('category'), str):
-                item_dict['category'] = models.CategoryType(item_dict['category'])
+                # FIX: Use normalize_category for safety here too
+                item_dict['category'] = normalize_category(item_dict['category'], item_dict['name'])
 
-            # 2. Auto-Compute Expiration Date if missing
+            # Auto-compute expiration date if missing
             if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
                 purchase_date = item_dict.get('purchase_date') or datetime.now()
-                
-                # ensure location is the enum for the helper function
                 loc = item_dict.get('location', models.LocationType.FRIDGE)
                 if isinstance(loc, str):
                     loc = models.LocationType(loc.lower())
-                    
                 item_dict['expiration_date'] = get_expiration_date(
-                    item_name=item_dict['name'], 
-                    purchase_date=purchase_date, 
+                    item_name=item_dict['name'],
+                    purchase_date=purchase_date,
                     location=loc
                 )
 
-            # Handle location string to enum fallback before saving
             if isinstance(item_dict.get('location'), str):
                 item_dict['location'] = models.LocationType(item_dict['location'].lower())
 
@@ -170,7 +207,8 @@ def confirm_receipt_items(items: List[schemas.ItemCreate], db: Session = Depends
             db.refresh(item)
 
         return {"message": f"Created {len(created_items)} items", "items": created_items}
-    
+
     except Exception as e:
         db.rollback()
+        print(f"confirm_receipt_items error: {e}")
         raise HTTPException(status_code=500, detail=f"Error saving scanned items: {str(e)}")
