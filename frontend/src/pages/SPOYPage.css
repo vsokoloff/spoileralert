@@ -3,6 +3,9 @@
   flex-direction: column;
   height: 100vh;
   background: var(--bg-primary);
+  /* NEW: Add padding and box-sizing to lift the input above the bottom nav */
+  padding-bottom: 80px; 
+  box-sizing: border-box;
 }
 
 /* ── Header ── */

@@ -102,6 +102,15 @@ function CategoryPage() {
                       <span className="category-badge" style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}>
                         {item.category}
                       </span>
+                      <span className="category-badge" style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}>
+                        {item.category}
+                      </span>
+                      {/* NEW: Display the tag if it exists */}
+                      {item.shared_with && (
+                        <span className="shared-badge" style={{ backgroundColor: '#f3f4f6', color: '#4b5563', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>
+                          👤 {item.shared_with}
+                        </span>
+                      )}
                       {item.quantity > 1 && (
                         <span className="quantity">Qty: {item.quantity}</span>
                       )}

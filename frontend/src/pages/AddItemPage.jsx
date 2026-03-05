@@ -18,6 +18,7 @@ function AddItemPage() {
     location: 'fridge',
     expiration_date: '',
     purchase_date: '',
+    shared_with: '', // NEW
   })
   const [scanning, setScanning] = useState(false)
   const [scannedItems, setScannedItems] = useState([])
@@ -49,6 +50,7 @@ function AddItemPage() {
         location: formData.location,
         purchase_date: purchaseDate,
         consumed: false,
+        shared_with: formData.shared_with || null, // NEW
       }
       
       if (expirationDate) {
@@ -326,6 +328,16 @@ function AddItemPage() {
             name="purchase_date"
             value={formData.purchase_date}
             onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-group">
+          <label>Shared With (Optional)</label>
+          <input
+            type="text"
+            name="shared_with"
+            value={formData.shared_with}
+            onChange={handleInputChange}
+            placeholder="e.g., Sarah, Everyone"
           />
         </div>
 

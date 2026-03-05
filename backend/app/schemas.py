@@ -15,6 +15,9 @@ class ItemBase(BaseModel):
     location: LocationType
     purchase_date: Optional[datetime] = None
     consumed: bool = False
+    
+    # NEW: Allow the frontend to send and receive this tag
+    shared_with: Optional[str] = None
 
 # 2. Make them Optional for creation so the frontend doesn't have to send them
 class ItemCreate(ItemBase):

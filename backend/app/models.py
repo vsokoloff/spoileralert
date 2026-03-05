@@ -58,6 +58,10 @@ class Item(Base):
     purchase_date = Column(DateTime(timezone=USE_ENUM))
     consumed = Column(Boolean, default=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    # NEW: Simple text tag for roommates
+    shared_with = Column(String, nullable=True) 
+    
     created_at = Column(DateTime(timezone=USE_ENUM), server_default=func.now())
     updated_at = Column(DateTime(timezone=USE_ENUM), onupdate=func.now())
     
