@@ -1,66 +1,51 @@
-/* --- Editable Scanned Items CSS --- */
+/* Ensure review items look like cards */
 .scanned-item.editable {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px;
+  padding: 16px;
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .scanned-item-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
 }
 
 .scanned-item-controls {
   display: flex;
   gap: 8px;
-  align-items: center;
 }
 
+/* Edit Inputs */
 .edit-input {
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
   color: var(--text-primary);
-}
-
-.edit-input:focus {
-  border-color: var(--accent);
+  font-size: 14px;
 }
 
 .name-input { flex: 1; font-weight: bold; }
-.qty-input { width: 50px; }
+.qty-input { width: 60px; }
 .select-input { flex: 1; }
 
 .remove-item-btn {
+  color: #ef4444;
   background: none;
   border: none;
-  color: #ef4444; /* Red color to indicate delete */
-  padding: 8px;
-  border-radius: 8px;
+  padding: 4px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
 }
 
-.remove-item-btn:hover {
-  background: #fee2e2;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  padding-bottom: 100px; /* Push it up so it's not hidden by toolbar */
-}
-
-.action-buttons .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Push buttons above bottom nav */
+.review-actions {
+  margin-top: 20px;
+  padding-bottom: 100px; 
 }
