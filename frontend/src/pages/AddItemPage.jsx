@@ -8,64 +8,95 @@ import './AddItemPage.css'
 const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
-// Mirrored from expiration_db.py — provides autocomplete suggestions and smart defaults.
-// Format: { name, category, location }
-const KNOWN_ITEMS = [
+// Shelf life in days, mirrored from expiration_db.py.
+// Used to auto-calculate expiration date when user picks a suggestion.
+const SHELF_LIFE_DAYS = {
   // Produce
-  { name: 'Apple', category: 'Produce', location: 'fridge' },
-  { name: 'Banana', category: 'Produce', location: 'fridge' },
-  { name: 'Orange', category: 'Produce', location: 'fridge' },
-  { name: 'Lettuce', category: 'Produce', location: 'fridge' },
-  { name: 'Spinach', category: 'Produce', location: 'fridge' },
-  { name: 'Carrot', category: 'Produce', location: 'fridge' },
-  { name: 'Tomato', category: 'Produce', location: 'fridge' },
-  { name: 'Onion', category: 'Produce', location: 'pantry' },
-  { name: 'Potato', category: 'Produce', location: 'pantry' },
-  { name: 'Broccoli', category: 'Produce', location: 'fridge' },
-  { name: 'Cauliflower', category: 'Produce', location: 'fridge' },
-  { name: 'Cucumber', category: 'Produce', location: 'fridge' },
-  { name: 'Bell Pepper', category: 'Produce', location: 'fridge' },
-  { name: 'Mushroom', category: 'Produce', location: 'fridge' },
-  { name: 'Avocado', category: 'Produce', location: 'fridge' },
-  { name: 'Strawberry', category: 'Produce', location: 'fridge' },
-  { name: 'Blueberry', category: 'Produce', location: 'fridge' },
-  { name: 'Grapes', category: 'Produce', location: 'fridge' },
+  'Apple': 30, 'Banana': 7, 'Orange': 14, 'Lettuce': 7, 'Spinach': 5,
+  'Carrot': 21, 'Tomato': 7, 'Onion': 60, 'Potato': 30, 'Broccoli': 7,
+  'Cauliflower': 7, 'Cucumber': 7, 'Bell Pepper': 7, 'Mushroom': 7,
+  'Avocado': 5, 'Strawberry': 5, 'Blueberry': 7, 'Grapes': 7,
   // Eggs & Dairy
-  { name: 'Milk', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Eggs', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cheese', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Feta', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Yogurt', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Butter', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cream', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Sour Cream', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cottage Cheese', category: 'Eggs & Dairy', location: 'fridge' },
+  'Milk': 7, 'Eggs': 21, 'Cheese': 14, 'Feta': 7, 'Yogurt': 14,
+  'Butter': 30, 'Cream': 7, 'Sour Cream': 14, 'Cottage Cheese': 7,
   // Meat
-  { name: 'Chicken', category: 'Meat', location: 'fridge' },
-  { name: 'Beef', category: 'Meat', location: 'fridge' },
-  { name: 'Pork', category: 'Meat', location: 'fridge' },
-  { name: 'Fish', category: 'Meat', location: 'fridge' },
-  { name: 'Salmon', category: 'Meat', location: 'fridge' },
-  { name: 'Ground Beef', category: 'Meat', location: 'fridge' },
-  { name: 'Turkey', category: 'Meat', location: 'fridge' },
-  { name: 'Bacon', category: 'Meat', location: 'fridge' },
-  { name: 'Sausage', category: 'Meat', location: 'fridge' },
+  'Chicken': 2, 'Beef': 3, 'Pork': 3, 'Fish': 2, 'Salmon': 2,
+  'Ground Beef': 2, 'Turkey': 2, 'Bacon': 7, 'Sausage': 2,
   // Deli
-  { name: 'Deli Meat', category: 'Deli', location: 'fridge' },
-  { name: 'Ham', category: 'Deli', location: 'fridge' },
-  { name: 'Turkey Breast', category: 'Deli', location: 'fridge' },
-  { name: 'Salami', category: 'Deli', location: 'fridge' },
+  'Deli Meat': 5, 'Ham': 5, 'Turkey Breast': 5, 'Salami': 7,
   // Pantry
-  { name: 'Rice', category: 'Pantry', location: 'pantry' },
-  { name: 'Pasta', category: 'Pantry', location: 'pantry' },
-  { name: 'Flour', category: 'Pantry', location: 'pantry' },
-  { name: 'Sugar', category: 'Pantry', location: 'pantry' },
-  { name: 'Bread', category: 'Pantry', location: 'pantry' },
-  { name: 'Cereal', category: 'Pantry', location: 'pantry' },
-  { name: 'Oats', category: 'Pantry', location: 'pantry' },
+  'Rice': 180, 'Pasta': 365, 'Flour': 365, 'Sugar': 730,
+  'Bread': 7, 'Cereal': 180, 'Oats': 365,
   // Leftovers
-  { name: 'Leftovers', category: 'Leftovers', location: 'fridge' },
+  'Leftovers': 3,
+}
+
+// Full item metadata for autocomplete
+const KNOWN_ITEMS = [
+  { name: 'Apple',          category: 'Produce',     location: 'fridge'  },
+  { name: 'Banana',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Orange',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Lettuce',        category: 'Produce',     location: 'fridge'  },
+  { name: 'Spinach',        category: 'Produce',     location: 'fridge'  },
+  { name: 'Carrot',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Tomato',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Onion',          category: 'Produce',     location: 'pantry'  },
+  { name: 'Potato',         category: 'Produce',     location: 'pantry'  },
+  { name: 'Broccoli',       category: 'Produce',     location: 'fridge'  },
+  { name: 'Cauliflower',    category: 'Produce',     location: 'fridge'  },
+  { name: 'Cucumber',       category: 'Produce',     location: 'fridge'  },
+  { name: 'Bell Pepper',    category: 'Produce',     location: 'fridge'  },
+  { name: 'Mushroom',       category: 'Produce',     location: 'fridge'  },
+  { name: 'Avocado',        category: 'Produce',     location: 'fridge'  },
+  { name: 'Strawberry',     category: 'Produce',     location: 'fridge'  },
+  { name: 'Blueberry',      category: 'Produce',     location: 'fridge'  },
+  { name: 'Grapes',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Milk',           category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Eggs',           category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Cheese',         category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Feta',           category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Yogurt',         category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Butter',         category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Cream',          category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Sour Cream',     category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Cottage Cheese', category: 'Eggs & Dairy', location: 'fridge' },
+  { name: 'Chicken',        category: 'Meat',        location: 'fridge'  },
+  { name: 'Beef',           category: 'Meat',        location: 'fridge'  },
+  { name: 'Pork',           category: 'Meat',        location: 'fridge'  },
+  { name: 'Fish',           category: 'Meat',        location: 'fridge'  },
+  { name: 'Salmon',         category: 'Meat',        location: 'fridge'  },
+  { name: 'Ground Beef',    category: 'Meat',        location: 'fridge'  },
+  { name: 'Turkey',         category: 'Meat',        location: 'fridge'  },
+  { name: 'Bacon',          category: 'Meat',        location: 'fridge'  },
+  { name: 'Sausage',        category: 'Meat',        location: 'fridge'  },
+  { name: 'Deli Meat',      category: 'Deli',        location: 'fridge'  },
+  { name: 'Ham',            category: 'Deli',        location: 'fridge'  },
+  { name: 'Turkey Breast',  category: 'Deli',        location: 'fridge'  },
+  { name: 'Salami',         category: 'Deli',        location: 'fridge'  },
+  { name: 'Rice',           category: 'Pantry',      location: 'pantry'  },
+  { name: 'Pasta',          category: 'Pantry',      location: 'pantry'  },
+  { name: 'Flour',          category: 'Pantry',      location: 'pantry'  },
+  { name: 'Sugar',          category: 'Pantry',      location: 'pantry'  },
+  { name: 'Bread',          category: 'Pantry',      location: 'pantry'  },
+  { name: 'Cereal',         category: 'Pantry',      location: 'pantry'  },
+  { name: 'Oats',           category: 'Pantry',      location: 'pantry'  },
+  { name: 'Leftovers',      category: 'Leftovers',   location: 'fridge'  },
 ]
+
+/** Calculate expiration date string (YYYY-MM-DD) from today + shelf life days */
+function calcExpirationDate(itemName, location) {
+  const days = SHELF_LIFE_DAYS[itemName]
+  if (!days) return ''
+
+  let adjustedDays = days
+  if (location === 'freezer') adjustedDays = days * 3
+  else if (location === 'pantry' && days < 30) adjustedDays = 30
+
+  const date = new Date()
+  date.setDate(date.getDate() + adjustedDays)
+  // Format as YYYY-MM-DD for the date input
+  return date.toISOString().split('T')[0]
+}
 
 function useAutocomplete(query) {
   if (!query || query.length < 2) return []
@@ -75,7 +106,7 @@ function useAutocomplete(query) {
 
 function AddItemPage() {
   const navigate = useNavigate()
-  const [mode, setMode] = useState('select') // 'select' | 'manual' | 'review'
+  const [mode, setMode] = useState('select')
   const [formData, setFormData] = useState({
     name: '',
     quantity: 1,
@@ -93,7 +124,6 @@ function AddItemPage() {
 
   const suggestions = useAutocomplete(formData.name)
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -113,18 +143,18 @@ function AddItemPage() {
       ...prev,
       [name]: name === 'quantity' ? (value === '' ? '' : value) : value
     }))
-    if (name === 'name') {
-      setShowSuggestions(true)
-    }
+    if (name === 'name') setShowSuggestions(true)
   }
 
-  // When user picks a suggestion, fill in name + smart defaults for category/location
+  // When user picks a suggestion: fill name, category, location, AND expiration date
   const handleSuggestionClick = (item) => {
+    const expirationDate = calcExpirationDate(item.name, item.location)
     setFormData(prev => ({
       ...prev,
       name: item.name,
       category: item.category,
       location: item.location,
+      expiration_date: expirationDate,
     }))
     setShowSuggestions(false)
     nameInputRef.current?.blur()
@@ -261,7 +291,6 @@ function AddItemPage() {
           <h1>Review Items</h1>
           <div style={{ width: 24 }} />
         </header>
-
         <div className="review-layout">
           <div className="scanned-items-container">
             {scannedItems.map((item, index) => (
@@ -302,7 +331,6 @@ function AddItemPage() {
               </div>
             ))}
           </div>
-
           <div className="review-footer">
             <button className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
             <button className="btn primary" onClick={handleConfirmScanned}>
@@ -324,7 +352,7 @@ function AddItemPage() {
       </header>
       <form className="add-form" onSubmit={handleSubmit}>
 
-        {/* Name field with autocomplete */}
+        {/* Name with autocomplete */}
         <div className="form-group autocomplete-wrapper">
           <label>Item Name</label>
           <input
@@ -340,16 +368,24 @@ function AddItemPage() {
           />
           {showSuggestions && suggestions.length > 0 && (
             <ul className="autocomplete-list" ref={suggestionsRef}>
-              {suggestions.map((item) => (
-                <li
-                  key={item.name}
-                  className="autocomplete-item"
-                  onMouseDown={() => handleSuggestionClick(item)}
-                >
-                  <span className="autocomplete-name">{item.name}</span>
-                  <span className="autocomplete-meta">{item.category} · {item.location}</span>
-                </li>
-              ))}
+              {suggestions.map((item) => {
+                const days = SHELF_LIFE_DAYS[item.name]
+                const daysLabel = days
+                  ? (days >= 365 ? `${Math.round(days/365)}yr` : days >= 30 ? `${Math.round(days/30)}mo` : `${days}d`)
+                  : null
+                return (
+                  <li
+                    key={item.name}
+                    className="autocomplete-item"
+                    onMouseDown={() => handleSuggestionClick(item)}
+                  >
+                    <span className="autocomplete-name">{item.name}</span>
+                    <span className="autocomplete-meta">
+                      {item.category} · {item.location}{daysLabel ? ` · ${daysLabel}` : ''}
+                    </span>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>
@@ -383,7 +419,7 @@ function AddItemPage() {
         </div>
 
         <div className="form-group">
-          <label>Expiration Date (optional)</label>
+          <label>Expiration Date</label>
           <input
             type="date"
             name="expiration_date"
