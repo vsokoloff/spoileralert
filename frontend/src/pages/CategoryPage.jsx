@@ -21,7 +21,6 @@ function CategoryPage() {
     try {
       let data
       if (category === 'all') {
-        // Check for location filter in URL
         const urlParams = new URLSearchParams(window.location.search)
         const location = urlParams.get('location')
         if (location) {
@@ -62,13 +61,13 @@ function CategoryPage() {
           <ArrowLeft size={24} />
         </button>
         <h1>
-          {category === 'all' 
-            ? (new URLSearchParams(window.location.search).get('location') 
-                ? `${new URLSearchParams(window.location.search).get('location').charAt(0).toUpperCase() + new URLSearchParams(window.location.search).get('location').slice(1)}` 
+          {category === 'all'
+            ? (new URLSearchParams(window.location.search).get('location')
+                ? `${new URLSearchParams(window.location.search).get('location').charAt(0).toUpperCase() + new URLSearchParams(window.location.search).get('location').slice(1)}`
                 : 'All Items')
             : category}
         </h1>
-        <div style={{ width: 24 }} /> {/* Spacer */}
+        <div style={{ width: 24 }} />
       </header>
 
       <div className="category-content">
@@ -86,28 +85,29 @@ function CategoryPage() {
               const statusColor = getStatusColor(item.expiration_date, item.location)
               const statusText = getStatusText(item.expiration_date)
               const categoryColor = getCategoryColor(item.category)
-              
+
               return (
                 <div key={item.id} className="item-card">
                   <div className="item-info">
                     <div className="item-header">
                       <h3>{item.name}</h3>
-                      <span 
+                      <span
                         className="status-dot"
                         style={{ backgroundColor: `var(--${statusColor})` }}
                       />
                     </div>
                     <p className="status-text">{statusText}</p>
                     <div className="item-meta">
-                      <span className="category-badge" style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}>
+                      {/* FIX: Single category badge (was duplicated before) */}
+                      <span
+                        className="category-badge"
+                        style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}
+                      >
                         {item.category}
                       </span>
-                      <span className="category-badge" style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}>
-                        {item.category}
-                      </span>
-                      {/* NEW: Display the tag if it exists */}
+                      {/* FIX: shared_with badge now always renders and is properly styled */}
                       {item.shared_with && (
-                        <span className="shared-badge" style={{ backgroundColor: '#f3f4f6', color: '#4b5563', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>
+                        <span className="shared-badge">
                           👤 {item.shared_with}
                         </span>
                       )}
@@ -117,13 +117,13 @@ function CategoryPage() {
                     </div>
                   </div>
                   <div className="item-actions">
-                    <button 
+                    <button
                       className="action-btn edit"
                       onClick={() => navigate(`/edit/${item.id}`)}
                     >
                       <Edit size={18} />
                     </button>
-                    <button 
+                    <button
                       className="action-btn delete"
                       onClick={() => handleDelete(item.id)}
                     >

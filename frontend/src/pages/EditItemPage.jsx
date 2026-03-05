@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getItem, updateItem } from '../api/items'
 import './AddItemPage.css' // Reuse AddItemPage styles
 
-const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Shelf Staples', 'Meat', 'Leftovers']
+const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 function EditItemPage() {
@@ -18,6 +18,7 @@ function EditItemPage() {
     location: 'fridge',
     expiration_date: '',
     purchase_date: '',
+    shared_with: '', // FIX: added missing field
   })
 
   useEffect(() => {
@@ -27,10 +28,9 @@ function EditItemPage() {
   const loadItem = async () => {
     try {
       const item = await getItem(id)
-      // Format dates for date input (YYYY-MM-DD)
       const expDate = item.expiration_date ? new Date(item.expiration_date).toISOString().split('T')[0] : ''
       const purDate = item.purchase_date ? new Date(item.purchase_date).toISOString().split('T')[0] : ''
-      
+
       setFormData({
         name: item.name || '',
         quantity: item.quantity || 1,
@@ -38,6 +38,7 @@ function EditItemPage() {
         location: item.location || 'fridge',
         expiration_date: expDate,
         purchase_date: purDate,
+        shared_with: item.shared_with || '', // FIX: load from item
       })
     } catch (error) {
       console.error('Error loading item:', error)
@@ -59,7 +60,6 @@ function EditItemPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      // Format dates properly
       let expirationDate = formData.expiration_date
       if (expirationDate) {
         expirationDate = new Date(expirationDate + 'T00:00:00').toISOString()
@@ -68,7 +68,7 @@ function EditItemPage() {
         date.setDate(date.getDate() + 7)
         expirationDate = date.toISOString()
       }
-      
+
       let purchaseDate = formData.purchase_date
       if (purchaseDate) {
         purchaseDate = new Date(purchaseDate + 'T00:00:00').toISOString()
@@ -81,12 +81,11 @@ function EditItemPage() {
         location: formData.location,
         expiration_date: expirationDate,
         purchase_date: purchaseDate || null,
+        shared_with: formData.shared_with || null, // FIX: include in update payload
       }
-      
-      console.log('Updating item:', itemData)
+
       await updateItem(id, itemData)
-      console.log('Item updated successfully')
-      navigate(-1) // Go back to previous page
+      navigate(-1)
     } catch (error) {
       console.error('Error updating item:', error)
       const errorMessage = error.response?.data?.detail || error.message || 'Error updating item. Please try again.'
@@ -184,6 +183,18 @@ function EditItemPage() {
             name="purchase_date"
             value={formData.purchase_date}
             onChange={handleInputChange}
+          />
+        </div>
+
+        {/* FIX: Added Shared With field (was completely missing) */}
+        <div className="form-group">
+          <label>Shared With (optional)</label>
+          <input
+            type="text"
+            name="shared_with"
+            value={formData.shared_with}
+            onChange={handleInputChange}
+            placeholder="e.g., Sarah, Everyone"
           />
         </div>
 

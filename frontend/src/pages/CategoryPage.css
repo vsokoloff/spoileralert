@@ -122,15 +122,29 @@
 .item-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .category-badge {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
+}
+
+/* FIX: shared-badge was referenced in JSX but never defined in CSS */
+.shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .quantity {
