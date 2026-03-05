@@ -1,111 +1,207 @@
-/* Ensure review items look like cards */
-.scanned-item.editable {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+/* Container and Layout */
+.add-item-page {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+}
+
+.add-content {
   padding: 16px;
-  margin-bottom: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header */
+.add-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.add-header h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Mode Selection */
+.mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.mode-btn {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn .icon-wrapper {
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 50%;
+  color: var(--accent);
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Forms */
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
   gap: 12px;
 }
 
-.scanned-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 4px;
 }
 
-.scanned-item-controls {
-  display: flex;
-  gap: 8px;
-}
-
-/* Edit Inputs */
-.edit-input {
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px;
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.name-input { flex: 1; font-weight: bold; }
-.qty-input { width: 60px; }
-.select-input { flex: 1; }
-
-.remove-item-btn {
-  color: #ef4444;
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-}
-
-/* Push buttons above bottom nav */
-.review-actions {
-  margin-top: 20px;
-  padding-bottom: 100px; 
-}
-
-/* Review Page Specifics */
-.scanned-items-container {
-  max-height: 60vh; /* Limits the list height so it doesn't push buttons off-screen */
-  overflow-y: auto;
-  margin-bottom: 20px;
-  padding-right: 4px;
-}
-
-.scanned-item.editable {
+.form-group input, 
+.form-group select {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 12px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-primary);
+}
+
+/* Review Mode Cards */
+.scanned-items-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+  margin-bottom: 100px;
 }
 
-.scanned-item-header {
+.scanned-item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.item-card-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.scanned-item-controls {
-  display: flex;
+.item-card-grid {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr;
   gap: 8px;
 }
 
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-group label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
 .edit-input {
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
   border-radius: 8px;
   padding: 8px;
+  font-size: 0.9rem;
   color: var(--text-primary);
-  font-size: 14px;
 }
 
-.name-input { flex: 1; font-weight: bold; }
-.qty-input { width: 55px; }
-.select-input { flex: 1; }
+.name-input {
+  flex: 1;
+  font-weight: 600;
+  font-size: 1rem;
+}
 
-/* The fix for the hidden submit buttons */
-.review-footer {
+/* Action Footers */
+.sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  padding: 16px 20px;
   display: flex;
   gap: 12px;
-  padding-top: 10px;
-  padding-bottom: 110px; /* Large cushion to sit ABOVE the bottom toolbar */
-  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+  z-index: 10;
 }
 
-.remove-item-btn {
-  color: #ef4444;
-  background: none;
+.btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
   border: none;
   cursor: pointer;
-  padding: 4px;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn.secondary {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }

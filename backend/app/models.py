@@ -19,7 +19,7 @@ class CategoryType(str, enum.Enum):
     EGGS_DAIRY = "Eggs & Dairy"
     PRODUCE = "Produce"
     FREEZER = "Freezer"
-    PANTRY = "Shelf Staples"
+    PANTRY = "Pantry"  # Changed from "Shelf Staples"
     MEAT = "Meat"
     LEFTOVERS = "Leftovers"
 
