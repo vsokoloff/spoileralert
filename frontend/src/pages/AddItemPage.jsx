@@ -53,15 +53,13 @@ function AddItemPage() {
         shared_with: formData.shared_with || null,
       }
       
-      if (expirationDate) {
-         itemData.expiration_date = expirationDate;
-      }
+      if (expirationDate) itemData.expiration_date = expirationDate;
       
       await createItem(itemData)
       navigate('/')
     } catch (error) {
       console.error('Error:', error)
-      alert('Error creating item. Please try again.')
+      alert('Error creating item.')
     }
   }
 
@@ -126,7 +124,7 @@ function AddItemPage() {
     }
   }
 
-  // --- RENDERING MODES ---
+  // --- RENDERING ---
 
   if (mode === 'select') {
     return (
@@ -152,44 +150,73 @@ function AddItemPage() {
     )
   }
 
+  // ... (imports remain the same as your current file)
+
   if (mode === 'review') {
     return (
-      <div className="add-item-page">
+      <div className="add-item-page review-mode">
         <header className="add-header">
           <button className="back-btn" onClick={() => setMode('select')}><ArrowLeft size={24} /></button>
           <h1>Review Items</h1>
           <div style={{ width: 24 }} />
         </header>
+
         <div className="add-content">
-          <div className="scanned-items">
+          {/* We wrap items in a specific scroll container */}
+          <div className="scanned-items-container">
             {scannedItems.map((item, index) => (
               <div key={index} className="scanned-item editable">
                 <div className="scanned-item-header">
-                  <input type="text" value={item.name} className="edit-input name-input" onChange={(e) => handleScannedItemChange(index, 'name', e.target.value)} />
-                  <button className="remove-item-btn" onClick={() => handleRemoveScannedItem(index)}><Trash2 size={18} /></button>
+                  <input 
+                    type="text" 
+                    value={item.name} 
+                    className="edit-input name-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'name', e.target.value)} 
+                  />
+                  <button className="remove-item-btn" onClick={() => handleRemoveScannedItem(index)}>
+                    <Trash2 size={18} />
+                  </button>
                 </div>
                 <div className="scanned-item-controls">
-                  <input type="number" value={item.quantity} className="edit-input qty-input" onChange={(e) => handleScannedItemChange(index, 'quantity', e.target.value)} />
-                  <select value={item.category} className="edit-input select-input" onChange={(e) => handleScannedItemChange(index, 'category', e.target.value)}>
+                  <input 
+                    type="number" 
+                    value={item.quantity} 
+                    className="edit-input qty-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'quantity', e.target.value)} 
+                  />
+                  <select 
+                    value={item.category} 
+                    className="edit-input select-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'category', e.target.value)}
+                  >
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
-                  <select value={item.location} className="edit-input select-input" onChange={(e) => handleScannedItemChange(index, 'location', e.target.value)}>
+                  <select 
+                    value={item.location} 
+                    className="edit-input select-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'location', e.target.value)}
+                  >
                     {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                   </select>
                 </div>
               </div>
             ))}
           </div>
-          <div className="action-buttons">
+
+          {/* ACTION BUTTONS: Now specifically classed to stay visible */}
+          <div className="action-buttons review-footer">
             <button className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
-            <button className="btn primary" onClick={handleConfirmScanned}>Confirm & Add ({scannedItems.length})</button>
+            <button className="btn primary" onClick={handleConfirmScanned}>
+              Confirm & Add ({scannedItems.length})
+            </button>
           </div>
         </div>
       </div>
     )
   }
 
-  // MANUAL MODE
+// ... (rest of manual mode remains the same)
+
   return (
     <div className="add-item-page">
       <header className="add-header">
@@ -212,7 +239,7 @@ function AddItemPage() {
             {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
           </select>
         </div>
-        <div className="form-group"><label>Shared With</label><input type="text" name="shared_with" value={formData.shared_with} onChange={handleInputChange} placeholder="Sarah, Shared, etc." /></div>
+        <div className="form-group"><label>Shared With</label><input type="text" name="shared_with" value={formData.shared_with} onChange={handleInputChange} placeholder="Sarah, Everyone, etc." /></div>
         <div className="form-actions">
           <button type="button" className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
           <button type="submit" className="btn primary">Add Item</button>
