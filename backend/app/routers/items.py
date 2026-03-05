@@ -128,6 +128,10 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
     
+    # Safely extract the value whether it's an Enum object or a plain String
+    cat_val = db_item.category.value if hasattr(db_item.category, 'value') else db_item.category
+    loc_val = db_item.location.value if hasattr(db_item.location, 'value') else db_item.location
+    
     # Save to deleted_items
     import json
     deleted_item = models.DeletedItem(
@@ -138,8 +142,8 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
             "name": db_item.name,
             "expiration_date": db_item.expiration_date.isoformat(),
             "quantity": db_item.quantity,
-            "category": db_item.category.value,
-            "location": db_item.location.value,
+            "category": cat_val,
+            "location": loc_val,
             "purchase_date": db_item.purchase_date.isoformat() if db_item.purchase_date else None,
         })
     )
