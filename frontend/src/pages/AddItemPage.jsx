@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Camera, FileText, Trash2, PlusCircle } from 'lucide-react'
+import { ArrowLeft, Camera, FileText, Trash2 } from 'lucide-react'
 import { createItem } from '../api/items'
 import { scanReceipt, confirmReceiptItems } from '../api/receipt'
 import './AddItemPage.css'
@@ -78,7 +78,7 @@ function AddItemPage() {
             const base64 = event.target.result.split(',')[1]
             try {
               const result = await scanReceipt(base64)
-              setScannedItems(result.items || [])
+              setScannedItems(result.items)
               setMode('review')
             } catch (error) {
               console.error('Error:', error)
@@ -135,11 +135,11 @@ function AddItemPage() {
         <div className="add-content">
           <div className="mode-selector">
             <button className={`mode-btn scan ${scanning ? 'scanning' : ''}`} onClick={handleScanReceipt} disabled={scanning}>
-              <div className="icon-wrapper"><Camera size={32} /></div>
-              <span>{scanning ? 'Reading...' : 'Scan Receipt'}</span>
+              <Camera size={32} />
+              <span>{scanning ? 'Reading receipt...' : 'Scan Receipt'}</span>
             </button>
             <button className="mode-btn manual" onClick={() => setMode('manual')}>
-              <div className="icon-wrapper"><FileText size={32} /></div>
+              <FileText size={32} />
               <span>Manual Entry</span>
             </button>
           </div>
@@ -156,11 +156,13 @@ function AddItemPage() {
           <h1>Review Items</h1>
           <div style={{ width: 24 }} />
         </header>
-        <div className="add-content">
+
+        {/* This container now controls the flex layout */}
+        <div className="review-layout">
           <div className="scanned-items-container">
             {scannedItems.map((item, index) => (
-              <div key={index} className="scanned-item-card">
-                <div className="item-card-row">
+              <div key={index} className="scanned-item editable">
+                <div className="scanned-item-header">
                   <input 
                     type="text" 
                     value={item.name} 
@@ -171,44 +173,36 @@ function AddItemPage() {
                     <Trash2 size={18} />
                   </button>
                 </div>
-                <div className="item-card-grid">
-                  <div className="field-group">
-                    <label>Qty</label>
-                    <input 
-                      type="number" 
-                      value={item.quantity} 
-                      className="edit-input" 
-                      onChange={(e) => handleScannedItemChange(index, 'quantity', e.target.value)} 
-                    />
-                  </div>
-                  <div className="field-group">
-                    <label>Category</label>
-                    <select 
-                      value={item.category} 
-                      className="edit-input" 
-                      onChange={(e) => handleScannedItemChange(index, 'category', e.target.value)}
-                    >
-                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </div>
-                  <div className="field-group">
-                    <label>Location</label>
-                    <select 
-                      value={item.location} 
-                      className="edit-input" 
-                      onChange={(e) => handleScannedItemChange(index, 'location', e.target.value)}
-                    >
-                      {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-                    </select>
-                  </div>
+                <div className="scanned-item-controls">
+                  <input 
+                    type="number" 
+                    value={item.quantity} 
+                    className="edit-input qty-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'quantity', e.target.value)} 
+                  />
+                  <select 
+                    value={item.category} 
+                    className="edit-input select-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'category', e.target.value)}
+                  >
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                  <select 
+                    value={item.location} 
+                    className="edit-input select-input" 
+                    onChange={(e) => handleScannedItemChange(index, 'location', e.target.value)}
+                  >
+                    {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                  </select>
                 </div>
               </div>
             ))}
           </div>
-          <div className="review-footer sticky-footer">
+
+          <div className="review-footer">
             <button className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
             <button className="btn primary" onClick={handleConfirmScanned}>
-              Confirm ({scannedItems.length})
+              Confirm & Add ({scannedItems.length})
             </button>
           </div>
         </div>
@@ -216,48 +210,34 @@ function AddItemPage() {
     )
   }
 
-  // Manual Mode
   return (
     <div className="add-item-page">
       <header className="add-header">
         <button className="back-btn" onClick={() => setMode('select')}><ArrowLeft size={24} /></button>
-        <h1>Manual Entry</h1>
+        <h1>Add Item</h1>
         <div style={{ width: 24 }} />
       </header>
-      <div className="add-content">
-        <form className="add-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Item Name</label>
-            <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Whole Milk" required />
-          </div>
-          <div className="form-row">
-            <div className="form-group flex-1">
-              <label>Quantity</label>
-              <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} />
-            </div>
-            <div className="form-group flex-2">
-              <label>Location</label>
-              <select name="location" value={formData.location} onChange={handleInputChange}>
-                {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Category</label>
-            <select name="category" value={formData.category} onChange={handleInputChange}>
-              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Shared With (Optional)</label>
-            <input type="text" name="shared_with" value={formData.shared_with} onChange={handleInputChange} placeholder="e.g. Roommates" />
-          </div>
-          <div className="form-actions sticky-footer">
-            <button type="button" className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
-            <button type="submit" className="btn primary">Add to Inventory</button>
-          </div>
-        </form>
-      </div>
+      <form className="add-form" onSubmit={handleSubmit}>
+        <div className="form-group"><label>Item Name</label><input type="text" name="name" value={formData.name} onChange={handleInputChange} required /></div>
+        <div className="form-group"><label>Quantity</label><input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} /></div>
+        <div className="form-group">
+          <label>Category</label>
+          <select name="category" value={formData.category} onChange={handleInputChange}>
+            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Location</label>
+          <select name="location" value={formData.location} onChange={handleInputChange}>
+            {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+          </select>
+        </div>
+        <div className="form-group"><label>Shared With</label><input type="text" name="shared_with" value={formData.shared_with} onChange={handleInputChange} placeholder="Sarah, Everyone, etc." /></div>
+        <div className="form-actions">
+          <button type="button" className="btn secondary" onClick={() => setMode('select')}>Cancel</button>
+          <button type="submit" className="btn primary">Add Item</button>
+        </div>
+      </form>
     </div>
   )
 }
