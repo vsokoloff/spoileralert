@@ -125,33 +125,48 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
         models.Item.id == item_id,
         models.Item.user_id == DEFAULT_USER_ID
     ).first()
+    
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
     
-    # Safely extract the value whether it's an Enum object or a plain String
-    cat_val = db_item.category.value if hasattr(db_item.category, 'value') else db_item.category
-    loc_val = db_item.location.value if hasattr(db_item.location, 'value') else db_item.location
-    
-    # Save to deleted_items
-    import json
-    deleted_item = models.DeletedItem(
-        item_id=db_item.id,
-        name=db_item.name,
-        user_id=db_item.user_id,
-        original_data=json.dumps({
-            "name": db_item.name,
-            "expiration_date": db_item.expiration_date.isoformat(),
-            "quantity": db_item.quantity,
-            "category": cat_val,
-            "location": loc_val,
-            "purchase_date": db_item.purchase_date.isoformat() if db_item.purchase_date else None,
-        })
-    )
-    db.add(deleted_item)
-    
-    db.delete(db_item)
-    db.commit()
-    return {"message": "Item deleted"}
+    try:
+        # Safely extract enums/strings
+        cat_val = db_item.category.value if hasattr(db_item.category, 'value') else str(db_item.category)
+        loc_val = db_item.location.value if hasattr(db_item.location, 'value') else str(db_item.location)
+        
+        # Safely extract dates (handles both datetime objects and raw strings)
+        exp_val = db_item.expiration_date.isoformat() if hasattr(db_item.expiration_date, 'isoformat') else str(db_item.expiration_date)
+        
+        purch_val = None
+        if db_item.purchase_date:
+            purch_val = db_item.purchase_date.isoformat() if hasattr(db_item.purchase_date, 'isoformat') else str(db_item.purchase_date)
+
+        # Save backup to deleted_items
+        import json
+        deleted_item = models.DeletedItem(
+            item_id=db_item.id,
+            name=db_item.name,
+            user_id=db_item.user_id,
+            original_data=json.dumps({
+                "name": db_item.name,
+                "expiration_date": exp_val,
+                "quantity": db_item.quantity,
+                "category": cat_val,
+                "location": loc_val,
+                "purchase_date": purch_val,
+            })
+        )
+        db.add(deleted_item)
+        
+        db.delete(db_item)
+        db.commit()
+        return {"message": "Item deleted"}
+        
+    except Exception as e:
+        db.rollback()
+        # This will print the EXACT error to your Render logs
+        print(f"CRITICAL DELETE ERROR: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to delete item: {str(e)}")
 
 @router.get("/deleted/recent", response_model=List[dict])
 def get_recently_deleted(db: Session = Depends(get_db)):
