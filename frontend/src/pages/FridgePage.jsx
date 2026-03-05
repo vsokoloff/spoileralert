@@ -9,15 +9,16 @@ import InventoryPreview from '../components/InventoryPreview'
 import EmptyState from '../components/EmptyState'
 import './FridgePage.css'
 
+// FridgePage.jsx
 const CATEGORIES = [
-  { name: 'Deli', color: '#a78bfa' },
-  { name: 'Eggs & Dairy', color: '#fbbf24' },
-  { name: 'Produce', color: '#4ade80' },
-  { name: 'Meat', color: '#f87171' },
-  { name: 'Shelf Staples', color: '#fbbf24' },
-  { name: 'Leftovers', color: '#60a5fa' },
+  { name: 'Produce', color: '#10b981' },      // Green
+  { name: 'Meat', color: '#ef4444' },         // Red
+  { name: 'Eggs & Dairy', color: '#f59e0b' }, // Orange
+  { name: 'Pantry', color: '#facc15' },       // Yellow
+  { name: 'Deli', color: '#8b5cf6' },         // Purple
+  { name: 'Freezer', color: '#3b82f6' },      // Blue
+  { name: 'Leftovers', color: '#ec4899' },    // Pink
 ]
-
 function FridgePage() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])

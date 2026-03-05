@@ -5,19 +5,25 @@ from app.models import CategoryType, LocationType
 
 # Map old category names to new ones (for DB migration safety)
 CATEGORY_ALIASES = {
-    "Pantry": "Shelf Staples",
 }
 
 # 1. Remove category and expiration_date from the base model
+
+
 class ItemBase(BaseModel):
     name: str
+    expiration_date: datetime
     quantity: float = 1.0
+    category: CategoryType
     location: LocationType
     purchase_date: Optional[datetime] = None
     consumed: bool = False
-    
-    # NEW: Allow the frontend to send and receive this tag
-    shared_with: Optional[str] = None
+
+    @field_validator('category', mode='before')
+    @classmethod
+    def normalize_category(cls, v):
+        # Simply return the value or handle minor variations if needed
+        return v
 
 # 2. Make them Optional for creation so the frontend doesn't have to send them
 class ItemCreate(ItemBase):
