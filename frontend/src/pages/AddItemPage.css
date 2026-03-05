@@ -1,193 +1,89 @@
-.add-item-page {
-  min-height: 100vh;
-  padding-bottom: 80px;
-  background: var(--bg-primary);
+/* --- Editable Scanned Items CSS --- */
+.scanned-item.editable {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.add-header {
+.scanned-item-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-secondary);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  gap: 8px;
 }
 
-.back-btn {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.back-btn:hover {
-  background: var(--bg-hover);
-}
-
-.add-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.add-content {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.mode-selector {
+.scanned-item-controls {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 40px;
-}
-
-.mode-btn {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
+  gap: 8px;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text-primary);
 }
 
-.mode-btn:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shadow);
-}
-
-.mode-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.mode-btn span {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.add-form {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: 24px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--bg-card);
+.edit-input {
+  background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 14px;
+  outline: none;
   transition: border-color 0.2s;
 }
 
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
+.edit-input:focus {
   border-color: var(--accent);
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 32px;
-}
-
-.btn {
+.name-input {
   flex: 1;
-  padding: 14px 24px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.qty-input {
+  width: 60px;
+  text-align: center;
+}
+
+.select-input {
+  flex: 1;
+  padding: 8px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 28px;
+}
+
+.remove-item-btn {
+  background: none;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  color: #ef4444; /* Red color to indicate delete */
+  padding: 8px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn.primary {
-  background: var(--accent);
-  color: white;
-}
-
-.btn.primary:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-}
-
-.btn.secondary {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-
-.btn.secondary:hover {
-  background: var(--bg-hover);
-}
-
-.scanned-items {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
 }
 
-.scanned-item {
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid var(--border);
-}
-
-.scanned-item h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.scanned-item p {
-  font-size: 14px;
-  color: var(--text-secondary);
+.remove-item-btn:hover {
+  background: #fee2e2;
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
   position: sticky;
-  bottom: 100px;
+  bottom: 0px; 
   background: var(--bg-primary);
   padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.action-buttons .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

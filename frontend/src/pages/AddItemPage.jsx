@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Camera, FileText } from 'lucide-react'
+import { ArrowLeft, Camera, FileText, Trash2 } from 'lucide-react'
 import { createItem } from '../api/items'
 import { scanReceipt, confirmReceiptItems } from '../api/receipt'
 import './AddItemPage.css'
@@ -10,7 +10,7 @@ const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 function AddItemPage() {
   const navigate = useNavigate()
-  const [mode, setMode] = useState('select') // 'select', 'manual', 'scan'
+  const [mode, setMode] = useState('select') // 'select', 'manual', 'review'
   const [formData, setFormData] = useState({
     name: '',
     quantity: 1,
@@ -26,7 +26,6 @@ function AddItemPage() {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      // Allow empty string for quantity so the user can backspace the "1"
       [name]: name === 'quantity' ? (value === '' ? '' : value) : value
     }))
   }
@@ -34,7 +33,6 @@ function AddItemPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      // 1. Only format expirationDate IF the user actually typed one in
       let expirationDate = undefined;
       if (formData.expiration_date) {
         expirationDate = new Date(formData.expiration_date + 'T00:00:00').toISOString()
@@ -53,14 +51,11 @@ function AddItemPage() {
         consumed: false,
       }
       
-      // 2. Only attach it to the payload if it exists
       if (expirationDate) {
          itemData.expiration_date = expirationDate;
       }
       
-      console.log('Submitting item:', itemData)
       const result = await createItem(itemData)
-      console.log('Item created:', result)
       navigate('/')
     } catch (error) {
       console.error('Error creating item:', error)
@@ -72,11 +67,10 @@ function AddItemPage() {
   const handleScanReceipt = async () => {
     setScanning(true)
     try {
-      // For MVP, we'll use a file input
       const input = document.createElement('input')
       input.type = 'file'
       input.accept = 'image/*'
-      input.capture = 'environment' // opens rear camera directly on mobile
+      input.capture = 'environment' 
       input.onchange = async (e) => {
         const file = e.target.files[0]
         if (file) {
@@ -104,12 +98,28 @@ function AddItemPage() {
     }
   }
 
+  // --- NEW: Handlers for editing scanned items inline ---
+  const handleScannedItemChange = (index, field, value) => {
+    const updatedItems = [...scannedItems]
+    updatedItems[index] = { ...updatedItems[index], [field]: value }
+    setScannedItems(updatedItems)
+  }
+
+  const handleRemoveScannedItem = (index) => {
+    const updatedItems = scannedItems.filter((_, i) => i !== index)
+    setScannedItems(updatedItems)
+    // If they delete all items, take them back to select mode
+    if (updatedItems.length === 0) {
+      setMode('select')
+    }
+  }
+  // ------------------------------------------------------
+
   const handleConfirmScanned = async () => {
     try {
       const items = scannedItems.map(item => ({
         ...item,
-        // We REMOVED the hardcoded 7-day fallback here! 
-        // The backend will now intercept this and calculate it properly.
+        quantity: parseFloat(item.quantity) || 1.0,
         purchase_date: new Date().toISOString(),
         consumed: false,
       }))
@@ -170,10 +180,54 @@ function AddItemPage() {
         <div className="add-content">
           <div className="scanned-items">
             {scannedItems.map((item, index) => (
-              <div key={index} className="scanned-item">
-                <div className="item-details">
-                  <h3>{item.name}</h3>
-                  <p>{item.category} • {item.location}</p>
+              <div key={index} className="scanned-item editable">
+                <div className="scanned-item-header">
+                  <input
+                    type="text"
+                    value={item.name}
+                    onChange={(e) => handleScannedItemChange(index, 'name', e.target.value)}
+                    className="edit-input name-input"
+                    placeholder="Item Name"
+                  />
+                  <button 
+                    className="remove-item-btn" 
+                    onClick={() => handleRemoveScannedItem(index)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+                
+                <div className="scanned-item-controls">
+                  <input
+                    type="number"
+                    value={item.quantity === '' ? '' : item.quantity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleScannedItemChange(index, 'quantity', val === '' ? '' : val)
+                    }}
+                    className="edit-input qty-input"
+                    placeholder="Qty"
+                    min="0.1"
+                    step="0.1"
+                  />
+                  <select
+                    value={item.category}
+                    onChange={(e) => handleScannedItemChange(index, 'category', e.target.value)}
+                    className="edit-input select-input"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={item.location}
+                    onChange={(e) => handleScannedItemChange(index, 'location', e.target.value)}
+                    className="edit-input select-input"
+                  >
+                    {LOCATIONS.map(loc => (
+                      <option key={loc} value={loc}>{loc.charAt(0).toUpperCase() + loc.slice(1)}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             ))}
@@ -182,8 +236,8 @@ function AddItemPage() {
             <button className="btn secondary" onClick={() => setMode('select')}>
               Cancel
             </button>
-            <button className="btn primary" onClick={handleConfirmScanned}>
-              Confirm & Add
+            <button className="btn primary" onClick={handleConfirmScanned} disabled={scannedItems.length === 0}>
+              Confirm & Add ({scannedItems.length})
             </button>
           </div>
         </div>
@@ -202,6 +256,7 @@ function AddItemPage() {
       </header>
 
       <form className="add-form" onSubmit={handleSubmit}>
+        {/* standard manual form unchanged */}
         <div className="form-group">
           <label>Item Name</label>
           <input
