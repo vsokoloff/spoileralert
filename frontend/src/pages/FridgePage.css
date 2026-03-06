@@ -1,21 +1,46 @@
 .fridge-page {
   min-height: 100vh;
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: 80px;
   background: var(--bg-primary);
 }
 
 .fridge-header {
-  padding: 20px 20px 16px;
-  text-align: center;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid var(--border);
   background: var(--bg-secondary);
 }
 
 .fridge-header h1 {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+}
+
+.fridge-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.header-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .fridge-content {
@@ -26,17 +51,9 @@
 }
 
 @media (max-width: 480px) {
-  .fridge-content {
-    padding: 12px;
-  }
-  
-  .fridge-header {
-    padding: 16px 12px 12px;
-  }
-  
-  .fridge-header h1 {
-    font-size: 24px;
-  }
+  .fridge-content { padding: 12px; }
+  .fridge-header { padding: 14px 16px; }
+  .fridge-header h1 { font-size: 22px; }
 }
 
 .loading {
@@ -47,9 +64,7 @@
   color: var(--text-secondary);
 }
 
-.category-section {
-  margin-top: 24px;
-}
+.category-section { margin-top: 24px; }
 
 .category-section-title {
   font-size: 16px;
@@ -58,14 +73,7 @@
   margin-bottom: 12px;
 }
 
-/* ==========================================================
-   Category Grid Font Size Increase 
-   (Targets elements inside CategoryGrid.jsx from this page)
-   ========================================================== */
-
-.category-card {
-  padding: 16px 12px !important;
-}
+.category-card { padding: 16px 12px !important; }
 
 .category-card span,
 .category-name {

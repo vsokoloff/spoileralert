@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { HelpCircle, Bell } from 'lucide-react'
 import { getItems } from '../api/items'
 import { getCategories, getItemsByCategory } from '../api/categories'
 import { getCategoryColor, getStatusColor } from '../utils/colors'
@@ -7,39 +8,41 @@ import LocationGrid from '../components/LocationGrid'
 import CategoryGrid from '../components/CategoryGrid'
 import InventoryPreview from '../components/InventoryPreview'
 import EmptyState from '../components/EmptyState'
+import HelpModal from '../components/HelpModal'
 import './FridgePage.css'
 
-// FridgePage.jsx
 const CATEGORIES = [
-  { name: 'Produce', color: '#10b981' },      // Green
-  { name: 'Meat', color: '#ef4444' },         // Red
-  { name: 'Eggs & Dairy', color: '#f59e0b' }, // Orange
-  { name: 'Pantry', color: '#facc15' },       // Yellow
-  { name: 'Deli', color: '#8b5cf6' },         // Purple
-  { name: 'Freezer', color: '#3b82f6' },      // Blue
-  { name: 'Leftovers', color: '#ec4899' },    // Pink
+  { name: 'Produce',     color: '#10b981' },
+  { name: 'Meat',        color: '#ef4444' },
+  { name: 'Eggs & Dairy',color: '#f59e0b' },
+  { name: 'Pantry',      color: '#facc15' },
+  { name: 'Deli',        color: '#8b5cf6' },
+  { name: 'Freezer',     color: '#3b82f6' },
+  { name: 'Leftovers',   color: '#ec4899' },
 ]
+
 function FridgePage() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [helpOpen, setHelpOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
     loadData()
+    // Show tutorial on first visit
+    const seen = localStorage.getItem('helpSeen')
+    if (!seen) {
+      setHelpOpen(true)
+      localStorage.setItem('helpSeen', 'true')
+    }
   }, [])
 
   const loadData = async () => {
     try {
       const [itemsData, categoriesData] = await Promise.all([
-        getItems().catch(err => {
-          console.error('Error fetching items:', err)
-          return []
-        }),
-        getCategories().catch(err => {
-          console.error('Error fetching categories:', err)
-          return []
-        })
+        getItems().catch(err => { console.error('Error fetching items:', err); return [] }),
+        getCategories().catch(err => { console.error('Error fetching categories:', err); return [] })
       ])
       setItems(itemsData || [])
       setCategories(categoriesData || [])
@@ -52,21 +55,11 @@ function FridgePage() {
     }
   }
 
-  const handleLocationClick = (location) => {
-    navigate(`/category/all?location=${location}`)
-  }
+  const handleLocationClick = (location) => navigate(`/category/all?location=${location}`)
+  const handleCategoryClick = (category) => navigate(`/category/${category}`)
 
-  const handleCategoryClick = (category) => {
-    navigate(`/category/${category}`)
-  }
-
-  // Get location counts
   const getLocationCounts = () => {
-    const counts = {
-      fridge: 0,
-      freezer: 0,
-      pantry: 0,
-    }
+    const counts = { fridge: 0, freezer: 0, pantry: 0 }
     items.forEach(item => {
       if (item.location === 'fridge') counts.fridge++
       else if (item.location === 'freezer') counts.freezer++
@@ -79,42 +72,55 @@ function FridgePage() {
     ]
   }
 
-  if (loading) {
-    return <div className="loading">Loading...</div>
-  }
+  if (loading) return <div className="loading">Loading...</div>
 
-  if (items.length === 0) {
-    return <EmptyState onAddClick={() => navigate('/add')} />
-  }
+  if (items.length === 0) return <EmptyState onAddClick={() => navigate('/add')} />
 
   return (
     <div className="fridge-page">
       <header className="fridge-header">
         <h1>My Fridge</h1>
+        <div className="fridge-header-actions">
+          <button
+            className="header-icon-btn"
+            onClick={() => navigate('/notifications/settings')}
+            title="Notification settings"
+          >
+            <Bell size={20} />
+          </button>
+          <button
+            className="header-icon-btn"
+            onClick={() => setHelpOpen(true)}
+            title="Help & Tutorial"
+          >
+            <HelpCircle size={20} />
+          </button>
+        </div>
       </header>
 
       <div className="fridge-content">
-        <InventoryPreview 
-          items={items} 
+        <InventoryPreview
+          items={items}
           totalCount={items.length}
           onViewAll={() => navigate('/category/all')}
         />
 
-        <LocationGrid 
+        <LocationGrid
           locationCounts={getLocationCounts()}
           onLocationClick={handleLocationClick}
         />
 
         <div className="category-section">
-          {/* Changed text from 'Categories' to clarify its purpose */}
           <div className="category-section-title">Filter Inventory by Category</div>
-          <CategoryGrid 
+          <CategoryGrid
             categories={CATEGORIES}
             categoryCounts={categories}
             onCategoryClick={handleCategoryClick}
           />
         </div>
       </div>
+
+      <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }
