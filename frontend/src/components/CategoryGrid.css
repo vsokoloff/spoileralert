@@ -1,14 +1,17 @@
 .category-grid {
-  display: grid;
-  /* Changed from 6 columns to 3 or 4 for bigger tiles */
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-  gap: 12px;
-  padding: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* This centers all rows, including the last one */
+  gap: 16px; /* Increased gap for better breathing room */
+  padding: 8px;
+  max-width: 100%;
 }
 
 .category-tile {
-  aspect-ratio: 1 / 1.1; /* Slightly taller for better text spacing */
-  border-radius: 16px;
+  /* Set a fixed width so they still look like a grid but can be centered */
+  width: 115px; 
+  aspect-ratio: 1 / 1.1;
+  border-radius: 20px; /* More rounded for a modern look */
   border: 2px solid;
   display: flex;
   flex-direction: column;
@@ -16,7 +19,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 12px 8px;
+  padding: 16px 8px;
   background-color: var(--bg-card);
 }
 
@@ -27,8 +30,8 @@
 }
 
 .category-name {
-  font-size: 13px; /* Bigger font */
-  font-weight: 700; /* Bolder */
+  font-size: 14px; /* Larger, clearer text */
+  font-weight: 700;
   color: var(--text-primary);
   margin-top: 8px;
   text-align: center;
@@ -43,12 +46,12 @@
   opacity: 0.8;
 }
 
-/* Specific layout for the section title */
 .category-section-title {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-secondary);
-  margin: 24px 0 12px 4px;
+  margin: 24px 0 12px 0;
+  text-align: center; /* Centered section title to match the grid */
   text-transform: uppercase;
   letter-spacing: 1px;
 }
