@@ -77,7 +77,7 @@ EXPIRATION_DATABASE: Dict[str, int] = {
     "melon": 7, "watermelon": 7, "cantaloupe": 7, "honeydew": 7,
 
     # Individual produce
-    "avocado": 3, "banana": 2, "mango": 4, "pineapple": 4,
+    "avocado": 3, "banana": 7, "mango": 4, "pineapple": 4,  # banana = counter life ~7 days
     "peach": 3, "plum": 3, "apricot": 3,
 
     # DAI_01 Liquid Dairy — 7 days

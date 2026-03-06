@@ -34,7 +34,7 @@ const SHELF_LIFE_DAYS = {
 // Full item metadata for autocomplete
 const KNOWN_ITEMS = [
   { name: 'Apple',          category: 'Produce',     location: 'fridge'  },
-  { name: 'Banana',         category: 'Produce',     location: 'fridge'  },
+  { name: 'Banana',         category: 'Produce',     location: 'pantry'  },
   { name: 'Orange',         category: 'Produce',     location: 'fridge'  },
   { name: 'Lettuce',        category: 'Produce',     location: 'fridge'  },
   { name: 'Spinach',        category: 'Produce',     location: 'fridge'  },

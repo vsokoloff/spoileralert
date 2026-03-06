@@ -141,6 +141,7 @@ Rules for "generic_name": The simplest possible singular food name.
 Categories MUST be exactly one of: Deli, Eggs & Dairy, Produce, Freezer, Pantry, Meat, Leftovers
 Location must be exactly one of: fridge, freezer, pantry
 Frozen items → freezer, rice/pasta/canned goods → pantry, produce/meat/dairy → fridge
+Counter fruits that should NOT be refrigerated (bananas, avocados, tomatoes, onions) → pantry
 
 Only include food items, skip non-food. Return valid JSON only, no markdown."""
 
