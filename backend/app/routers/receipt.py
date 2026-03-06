@@ -6,7 +6,7 @@ import traceback
 from openai import OpenAI
 from app.database import get_db
 from app import models, schemas
-from app.expiration_db import get_expiration_date, categorize_item
+from app.expiration_db import get_expiration_date, categorize_item, EXPIRATION_DATABASE, CATEGORY_DEFAULT_DAYS, _normalize_name
 from datetime import datetime, timedelta
 from typing import List
 
@@ -14,7 +14,6 @@ router = APIRouter()
 
 DEFAULT_USER_ID = 1
 
-# Maps GPT category output to valid CategoryType enums
 CATEGORY_NORMALIZE_MAP = {
     "shelf staples": models.CategoryType.PANTRY,
     "shelf staple": models.CategoryType.PANTRY,
@@ -46,18 +45,6 @@ CATEGORY_NORMALIZE_MAP = {
     "leftover": models.CategoryType.LEFTOVERS,
 }
 
-# Fallback shelf life in days by category, for items not in expiration_db.py.
-# Much better than the blanket 7-day default.
-CATEGORY_DEFAULT_DAYS = {
-    models.CategoryType.PRODUCE:    7,
-    models.CategoryType.EGGS_DAIRY: 14,
-    models.CategoryType.MEAT:       3,
-    models.CategoryType.DELI:       5,
-    models.CategoryType.PANTRY:     180,
-    models.CategoryType.FREEZER:    90,
-    models.CategoryType.LEFTOVERS:  3,
-}
-
 def normalize_category(raw: str, item_name: str) -> models.CategoryType:
     if not raw:
         return categorize_item(item_name)
@@ -71,33 +58,41 @@ def normalize_category(raw: str, item_name: str) -> models.CategoryType:
     return categorize_item(item_name)
 
 
-def smart_expiration_date(generic_name: str, display_name: str,
+def smart_expiration_date(item_name: str, generic_name: str,
                           location: models.LocationType,
                           category: models.CategoryType) -> datetime:
     """
-    Calculate expiration date using the generic name for db lookup.
+    Calculate expiration date using normalized name lookup.
+    Uses _normalize_name to handle plurals and parentheticals before DB lookup.
     Falls back to category-based defaults instead of a blanket 7 days.
     """
     purchase_date = datetime.now()
-
-    # Try expiration_db lookup using the generic name
-    from app.expiration_db import EXPIRATION_DATABASE
-    generic_lower = generic_name.lower()
     shelf_life_days = None
-    for key, days in EXPIRATION_DATABASE.items():
-        if key in generic_lower or generic_lower in key:
-            shelf_life_days = days
+
+    # Try both the generic name and the display name, both normalized
+    for name in [generic_name, item_name]:
+        normalized = _normalize_name(name)
+        raw = name.lower().strip()
+        for key, days in EXPIRATION_DATABASE.items():
+            if key in normalized or normalized in key:
+                shelf_life_days = days
+                break
+        if shelf_life_days is None:
+            for key, days in EXPIRATION_DATABASE.items():
+                if key in raw or raw in key:
+                    shelf_life_days = days
+                    break
+        if shelf_life_days is not None:
             break
 
     if shelf_life_days is None:
-        # Use category-based default instead of the 7-day blanket fallback
-        shelf_life_days = CATEGORY_DEFAULT_DAYS.get(category, 7)
-        print(f"[receipt] No expiration match for '{generic_name}', using category default: {shelf_life_days}d")
+        shelf_life_days = CATEGORY_DEFAULT_DAYS.get(category, 5)
+        print(f"[receipt] No match for '{item_name}'/'{generic_name}', using category default: {shelf_life_days}d")
 
-    # Apply location multipliers (same as expiration_db.py)
+    # Location adjustments
     if location == models.LocationType.FREEZER:
-        shelf_life_days *= 3
-    elif location == models.LocationType.PANTRY and shelf_life_days < 30:
+        shelf_life_days = max(shelf_life_days * 4, 90)
+    elif location == models.LocationType.PANTRY and shelf_life_days < 14:
         shelf_life_days = 30
 
     return purchase_date + timedelta(days=shelf_life_days)
@@ -121,9 +116,6 @@ def scan_receipt_with_openai(image_base64: str) -> List[dict]:
 
     client = OpenAI(api_key=api_key, timeout=45.0, max_retries=1)
 
-    # Key improvement: ask GPT for BOTH a clean display name AND a generic food name
-    # for expiration lookup. Store receipts use abbreviations like "Bc Nf Van Grk Ygrt"
-    # which we need to normalize to "greek yogurt" to get correct shelf life.
     prompt = """Look at this grocery receipt and extract all food items.
 
 Return ONLY a JSON array. Each item must have these exact fields:
@@ -137,13 +129,14 @@ Return ONLY a JSON array. Each item must have these exact fields:
   }
 ]
 
-Rules for "name": Clean up abbreviations into a readable product name. 
-  "Wfm Clementine Bag" → "Clementines", "Bc Nf Van Grk Ygrt" → "Greek Yogurt (Vanilla)", 
-  "Mitica Parm Reg Gra" → "Parmesan (Grated)"
+Rules for "name": Clean up store abbreviations into a readable product name.
+  "Wfm Clementine Bag" → "Clementines", "Bc Nf Van Grk Ygrt" → "Greek Yogurt",
+  "Mitica Parm Reg Gra" → "Parmesan", "Org Baby Spinach" → "Baby Spinach"
 
-Rules for "generic_name": The simplest possible food category name for shelf life lookup.
-  "Clementines" → "orange", "Greek Yogurt" → "yogurt", "Parmesan" → "cheese",
-  "Ground Beef 85%" → "ground beef", "Baby Spinach" → "spinach"
+Rules for "generic_name": The simplest possible singular food name.
+  "Clementines" → "clementine", "Greek Yogurt" → "greek yogurt",
+  "Parmesan" → "parmesan", "Ground Beef 85%" → "ground beef",
+  "Baby Spinach" → "spinach", "Green Beans" → "green bean"
 
 Categories MUST be exactly one of: Deli, Eggs & Dairy, Produce, Freezer, Pantry, Meat, Leftovers
 Location must be exactly one of: fridge, freezer, pantry
@@ -198,7 +191,6 @@ Only include food items, skip non-food. Return valid JSON only, no markdown."""
 
 @router.get("/test")
 def test_receipt_endpoint():
-    """Health check: verifies API key is set and OpenAI is reachable."""
     api_key = os.getenv("OPENAI_API_KEY")
     has_key = bool(api_key)
     result = {
@@ -223,22 +215,17 @@ def test_receipt_endpoint():
 
 @router.post("/scan", response_model=schemas.ReceiptScanResponse)
 def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_db)):
-    """Scan receipt and extract items using OpenAI Vision."""
     try:
         raw_items = scan_receipt_with_openai(request.image_base64)
-
         items = []
         for raw in raw_items:
             try:
                 name = raw.get("name", "").strip()
                 if not name:
                     continue
-
-                # generic_name is used purely for expiration lookup, not displayed
                 generic_name = raw.get("generic_name", name).strip()
                 quantity = float(raw.get("quantity", 1))
                 category = normalize_category(raw.get("category", ""), name)
-
                 location_str = str(raw.get("location", "fridge")).lower().strip()
                 location_map = {
                     "fridge": models.LocationType.FRIDGE,
@@ -246,19 +233,12 @@ def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_
                     "pantry": models.LocationType.PANTRY,
                 }
                 location = location_map.get(location_str, models.LocationType.FRIDGE)
-
                 items.append(schemas.ReceiptItem(
                     name=name.title(),
                     quantity=quantity,
                     category=category,
                     location=location,
-                    # Pass generic_name through for use in confirm step
-                    # ReceiptItem doesn't store it but confirm will re-derive from name
                 ))
-
-                # Store generic_name on the raw dict for confirm endpoint to use
-                raw["_generic_name"] = generic_name
-
             except Exception as item_err:
                 print(f"[receipt] Skipping malformed item {raw}: {item_err}")
                 continue
@@ -274,32 +254,26 @@ def scan_receipt(request: schemas.ReceiptScanRequest, db: Session = Depends(get_
 
 @router.post("/scan/confirm")
 def confirm_receipt_items(items: List[schemas.ItemCreate], db: Session = Depends(get_db)):
-    """Confirm and save items from receipt scan."""
     try:
         created_items = []
         for item_data in items:
             try:
                 item_dict = item_data.dict(exclude_unset=True)
 
-                # Normalize category
                 if 'category' not in item_dict or item_dict['category'] is None:
                     item_dict['category'] = categorize_item(item_dict['name'])
                 elif isinstance(item_dict.get('category'), str):
                     item_dict['category'] = normalize_category(item_dict['category'], item_dict['name'])
 
-                # Normalize location
                 if isinstance(item_dict.get('location'), str):
                     item_dict['location'] = models.LocationType(item_dict['location'].lower())
 
-                # Smart expiration: use category-based defaults if not in expiration_db
                 if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
-                    purchase_date = item_dict.get('purchase_date') or datetime.now()
                     loc = item_dict.get('location', models.LocationType.FRIDGE)
                     cat = item_dict.get('category', models.CategoryType.PRODUCE)
-
                     item_dict['expiration_date'] = smart_expiration_date(
+                        item_name=item_dict['name'],
                         generic_name=item_dict['name'],
-                        display_name=item_dict['name'],
                         location=loc,
                         category=cat,
                     )
