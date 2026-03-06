@@ -4,6 +4,7 @@
   background: var(--bg-primary);
 }
 
+/* ── Header ── */
 .category-header {
   display: flex;
   align-items: center;
@@ -13,7 +14,7 @@
   background: var(--bg-secondary);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 20;
 }
 
 .back-btn {
@@ -26,18 +27,186 @@
   transition: background 0.2s;
 }
 
-.back-btn:hover {
-  background: var(--bg-hover);
-}
+.back-btn:hover { background: var(--bg-hover); }
 
 .category-header h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
+  flex: 1;
+  text-align: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.icon-btn.active { color: var(--accent); }
+
+.filter-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Sort & Filter Panel ── */
+.controls-panel {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 57px;
+  z-index: 15;
+}
+
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.controls-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.chip-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.reset-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: underline;
+  align-self: flex-start;
+}
+
+/* ── Bulk Action Bar ── */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 57px;
+  z-index: 15;
+  gap: 8px;
+}
+
+.bulk-select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.bulk-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.bulk-delete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.bulk-cancel-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* ── Item List ── */
 .category-content {
-  padding: 20px;
+  padding: 16px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -61,17 +230,12 @@
   font-weight: 600;
   cursor: pointer;
   margin-top: 16px;
-  transition: background 0.2s;
-}
-
-.add-btn:hover {
-  background: var(--accent-hover);
 }
 
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .item-card {
@@ -80,43 +244,65 @@
   padding: 16px;
   border: 1px solid var(--border);
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.15s;
 }
 
 .item-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--shadow);
 }
 
-.item-info {
-  flex: 1;
+.item-card.selectable {
+  cursor: pointer;
+  user-select: none;
 }
+
+.item-card.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+}
+
+.item-checkbox {
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.item-info { flex: 1; min-width: 0; }
 
 .item-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .item-header h3 {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* ── Simplified status dots: green / yellow / red only ── */
 .status-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
+
+.status-dot.status-green  { background-color: #22c55e; }
+.status-dot.status-yellow { background-color: #eab308; }
+.status-dot.status-red    { background-color: #ef4444; }
 
 .status-text {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .item-meta {
@@ -127,18 +313,17 @@
 }
 
 .category-badge {
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
 }
 
-/* FIX: shared-badge was referenced in JSX but never defined in CSS */
 .shared-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
@@ -154,7 +339,8 @@
 
 .item-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -165,18 +351,14 @@
   cursor: pointer;
   color: var(--text-secondary);
   transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
 }
 
-.action-btn:hover {
-  background: var(--border);
-  color: var(--text-primary);
-}
+.action-btn:hover { background: var(--border); color: var(--text-primary); }
+.action-btn.delete:hover { background: #ef4444; color: white; }
 
-.action-btn.delete:hover {
-  background: var(--red);
-  color: white;
-}
-
+/* ── Floating Add Button ── */
 .floating-add-btn {
   position: fixed;
   bottom: 90px;
@@ -185,19 +367,24 @@
   color: white;
   border: none;
   border-radius: 16px;
-  padding: 16px 24px;
-  font-size: 16px;
+  padding: 14px 22px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px var(--shadow);
+  box-shadow: 0 4px 16px var(--shadow);
   transition: background 0.2s, transform 0.2s;
   z-index: 50;
 }
 
-.floating-add-btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
+.floating-add-btn:hover { transform: translateY(-2px); }
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: var(--text-secondary);
 }
