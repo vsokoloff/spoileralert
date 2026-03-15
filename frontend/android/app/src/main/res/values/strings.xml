@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">spoiler alert</string>
+    <string name="title_activity_main">spoiler alert</string>
+    <string name="package_name">com.spoileralert.app</string>
+    <string name="custom_url_scheme">com.spoileralert.app</string>
+</resources>
