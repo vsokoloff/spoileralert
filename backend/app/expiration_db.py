@@ -96,6 +96,10 @@ EXPIRATION_DATABASE: Dict[str, int] = {
 
     # DAI_05 Non-Dairy Milks — 8 days (opened)
     "oat milk": 8, "almond milk": 8, "soy milk": 8, "coconut milk": 8,
+    "nut milk": 8, "plant milk": 8, "cashew milk": 8, "macadamia milk": 8,
+
+    # Add these under Leftovers
+    "cooked": 4, "leftover": 3, "prepared": 4, "meal prep": 4,
 
     # General dairy
     "yogurt": 14, "greek yogurt": 14, "butter": 30, "sour cream": 14, "kefir": 14,
@@ -177,7 +181,7 @@ CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
         "cream cheese", "goat cheese", "cheddar", "parmesan", "parm",
         "gouda", "swiss", "provolone", "romano",
         "egg", "yogurt", "greek yogurt", "butter", "sour cream", "kefir",
-        "oat milk", "almond milk", "soy milk", "coconut milk",
+        "oat milk", "almond milk", "soy milk", "coconut milk", "nut milk", "plant milk", # <-- Added here
         "dairy", "cheese",
     ],
     CategoryType.MEAT: [
@@ -206,7 +210,7 @@ CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
         "waffle", "pancake",
     ],
     CategoryType.LEFTOVERS: [
-        "leftover", "cooked", "casserole", "stew",
+        "leftover", "cooked", "casserole", "stew", "prepared", "meal prep"
     ],
 }
 
@@ -244,6 +248,23 @@ def get_expiration_date(item_name: str, purchase_date: Optional[datetime] = None
             if key in item_lower or item_lower in key:
                 shelf_life_days = days
                 break
+    # 2. Fall back to raw lowercase name
+    if shelf_life_days is None:
+        for key, days in EXPIRATION_DATABASE.items():
+            if key in item_lower or item_lower in key:
+                shelf_life_days = days
+                break
+                
+    # NEW STEP: 2.5 Smart Generic Fallbacks
+    if shelf_life_days is None:
+        if "cooked" in item_lower or "leftover" in item_lower:
+            shelf_life_days = 4 # Default for cooked generics
+        elif "milk" in item_lower:
+            shelf_life_days = 7 # Default for unknown milks
+        elif "cheese" in item_lower:
+            shelf_life_days = 10 # Default for unknown cheeses
+        elif "meat" in item_lower or "beef" in item_lower or "chicken" in item_lower:
+            shelf_life_days = 3 # Default for unknown meats
 
     # 3. Category-based default
     if shelf_life_days is None:

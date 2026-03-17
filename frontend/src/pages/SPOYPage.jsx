@@ -36,35 +36,20 @@ function MessageText({ content }) {
 
 function SPOYPage() {
   const navigate = useNavigate()
-  const [messages, setMessages] = useState([])
+  // 1. Set an instant default greeting instead of an empty array
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: "Hi! I'm SPOY, your kitchen assistant. \n\nI can help you figure out what to make with the ingredients in your fridge. What are you in the mood for?" }
+  ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [autoLoading, setAutoLoading] = useState(true)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  useEffect(() => {
-    loadAutoRecommendations()
-  }, [])
-
+  // 2. Remove the loadAutoRecommendations useEffect completely.
+  // Just keep the scroll-to-bottom one.
   useEffect(() => {
     scrollToBottom()
   }, [messages, loading])
-
-  const loadAutoRecommendations = async () => {
-    setAutoLoading(true)
-    try {
-      const recommendation = await getAutoRecommendations()
-      if (recommendation && recommendation.response) {
-        setMessages([{ role: 'assistant', content: recommendation.response }])
-      }
-    } catch (error) {
-      console.error('Error loading auto recommendations:', error)
-      setMessages([])
-    } finally {
-      setAutoLoading(false)
-    }
-  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -96,8 +81,30 @@ function SPOYPage() {
     sendMessage(input)
   }
 
-  const handleSuggestion = (suggestion) => {
-    sendMessage(suggestion)
+  const handleSuggestion = async (suggestion) => {
+    // Intercept the specific "expiring items" button
+    if (suggestion === "Use my expiring items") {
+      setMessages(prev => [...prev, { role: 'user', content: suggestion }])
+      setLoading(true)
+      
+      try {
+        // This calls the specific /auto-recommend endpoint on your backend
+        const response = await getAutoRecommendations()
+        setMessages(prev => [...prev, { role: 'assistant', content: response.response }])
+      } catch (error) {
+        console.error('Error getting auto recommendations:', error)
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Sorry, I ran into an error. Please try again.'
+        }])
+      } finally {
+        setLoading(false)
+        inputRef.current?.focus()
+      }
+    } else {
+      // For all other suggestions, treat them as normal chat messages
+      sendMessage(suggestion)
+    }
   }
 
   const showSuggestions = !autoLoading && messages.length <= 1
@@ -119,27 +126,7 @@ function SPOYPage() {
       </header>
 
       <div className="messages-container">
-        {/* Loading state */}
-        {autoLoading && messages.length === 0 && (
-          <div className="message assistant">
-            <div className="msg-avatar">S</div>
-            <div className="message-content loading">
-              <span className="typing-indicator">
-                <span></span><span></span><span></span>
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!autoLoading && messages.length === 0 && (
-          <div className="empty-chat">
-            <div className="empty-avatar">S</div>
-            <h3>Hey! I'm SPOY</h3>
-            <p>Ask me for recipe ideas based on what's in your fridge. I'll prioritize items expiring soon.</p>
-          </div>
-        )}
-
+        <div className="messages-container">
         {/* Messages */}
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.role}`}>
@@ -150,7 +137,7 @@ function SPOYPage() {
           </div>
         ))}
 
-        {/* Typing indicator */}
+        {/* Typing indicator (only shows when user sends a message) */}
         {loading && (
           <div className="message assistant">
             <div className="msg-avatar">S</div>
@@ -163,6 +150,18 @@ function SPOYPage() {
         )}
 
         <div ref={messagesEndRef} />
+      </div>
+
+      {/* Quick suggestions - only show if there's only the greeting */}
+      {messages.length === 1 && (
+        <div className="suggestions-row">
+          {QUICK_SUGGESTIONS.map((s) => (
+            <button key={s} className="suggestion-chip" onClick={() => handleSuggestion(s)} disabled={loading}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
       </div>
 
       {/* Quick suggestions */}

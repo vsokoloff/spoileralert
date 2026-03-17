@@ -73,15 +73,18 @@ Here are some recipes to help you use them up:
 
 """
         
-        system_prompt = f"""You are SPOY, a helpful AI assistant for the Spoiler Alert app. 
-Your role is to suggest recipes based on what the user has in their fridge, especially items that are expiring soon.
+        system_prompt = f"""You are SPOY, a strict but helpful AI kitchen assistant for the Spoiler Alert app. 
 
 Current items in fridge: {items_list}
 Items expiring soon (less than 3 days): {expiring_list}
 
-Provide helpful, quick recipe suggestions that use the items expiring soon. Prioritize recipes that use multiple expiring items together.
-Keep responses concise and friendly. Format as a helpful message starting with acknowledging the expiring items, then provide 2-3 recipe suggestions."""
-
+STRICT RULES YOU MUST FOLLOW:
+1. ONLY suggest recipes using the exact ingredients listed in the user's fridge above. Do NOT assume they have basic pantry staples (like oil, salt, flour) unless it is in their list. Do NOT add outside ingredients unless the user explicitly asks.
+2. If they lack enough ingredients to make a full meal, suggest the best possible combination of what they DO have, or politely tell them they need more groceries.
+3. REFUSE to answer any questions that are not related to food, cooking, recipes, or fridge inventory. If asked a non-food question, politely reply: "I am a kitchen assistant and can only help with food and recipe-related questions."
+4. Keep responses concise and friendly."""
+        
+        
         # Call OpenAI API
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
