@@ -9,79 +9,79 @@ const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Mea
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 // Shelf life in days, mirrored from expiration_db.py.
-// Used to auto-calculate expiration date when user picks a suggestion.
 const SHELF_LIFE_DAYS = {
   // Produce
-  'Apple': 30, 'Banana': 7, 'Orange': 14, 'Lettuce': 7, 'Spinach': 5,
-  'Carrot': 21, 'Tomato': 7, 'Onion': 60, 'Potato': 30, 'Broccoli': 7,
-  'Cauliflower': 7, 'Cucumber': 7, 'Bell Pepper': 7, 'Mushroom': 7,
-  'Avocado': 5, 'Strawberry': 5, 'Blueberry': 7, 'Grapes': 7,
+  'Apple': 30, 'Banana': 7, 'Orange': 14, 'Lettuce': 7, 'Spinach': 5, 'Kale': 5, 'Arugula': 5,
+  'Carrot': 21, 'Tomato': 7, 'Onion': 60, 'Potato': 30, 'Sweet Potato': 30, 'Garlic': 60,
+  'Broccoli': 7, 'Cauliflower': 7, 'Cucumber': 7, 'Bell Pepper': 10, 'Mushroom': 5,
+  'Avocado': 5, 'Strawberry': 5, 'Blueberry': 7, 'Raspberry': 3, 'Blackberry': 3, 'Grapes': 14,
+  'Lemon': 21, 'Lime': 21, 'Grapefruit': 21, 'Melon': 7, 'Watermelon': 7, 'Celery': 14,
+  'Zucchini': 7, 'Squash': 14, 'Asparagus': 5, 'Green Beans': 7, 'Cabbage': 14,
+  
   // Eggs & Dairy
-  'Milk': 7, 'Eggs': 21, 'Cheese': 14, 'Feta': 7, 'Yogurt': 14,
-  'Butter': 30, 'Cream': 7, 'Sour Cream': 14, 'Cottage Cheese': 7,
-  // Meat
-  'Chicken': 2, 'Beef': 3, 'Pork': 3, 'Fish': 2, 'Salmon': 2,
-  'Ground Beef': 2, 'Turkey': 2, 'Bacon': 7, 'Sausage': 2,
-  // Deli
-  'Deli Meat': 5, 'Ham': 5, 'Turkey Breast': 5, 'Salami': 7,
-  // Pantry
-  'Rice': 180, 'Pasta': 365, 'Flour': 365, 'Sugar': 730,
-  'Bread': 7, 'Cereal': 180, 'Oats': 365,
-  // Leftovers
-  'Leftovers': 3,
+  'Milk': 7, 'Eggs': 28, 'Cheese': 14, 'Feta': 10, 'Yogurt': 14, 'Greek Yogurt': 14,
+  'Butter': 30, 'Cream': 7, 'Sour Cream': 14, 'Cottage Cheese': 10, 'Cream Cheese': 14,
+  'Oat Milk': 8, 'Almond Milk': 8, 'Soy Milk': 8, 'Nut Milk': 8, 'Plant Milk': 8,
+  'Parmesan': 60, 'Cheddar': 30, 'Mozzarella': 14, 'Brie': 10,
+
+  // Meat & Seafood
+  'Chicken': 2, 'Chicken Breast': 2, 'Beef': 4, 'Steak': 4, 'Pork': 4, 'Pork Chop': 4,
+  'Fish': 2, 'Salmon': 2, 'Tuna': 2, 'Shrimp': 2, 'Crab': 2, 'Scallops': 2,
+  'Ground Beef': 2, 'Ground Turkey': 2, 'Turkey': 2, 'Bacon': 14, 'Sausage': 3, 'Hot Dogs': 14,
+
+  // Deli & Plant-Based Proteins
+  'Deli Meat': 5, 'Ham': 5, 'Turkey Breast': 5, 'Salami': 14, 'Prosciutto': 14,
+  'Tofu': 7, 'Tempeh': 7, 'Seitan': 7, 'Hummus': 7, 'Guacamole': 3,
+
+  // Beverages
+  'Juice': 14, 'Orange Juice': 14, 'Apple Juice': 14, 'Lemonade': 14,
+  'Soda': 365, 'Water': 730, 'Sparkling Water': 365, 'Kombucha': 30,
+  'Coffee': 365, 'Tea': 365, 'Beer': 180, 'Wine': 5,
+
+  // Condiments & Sauces
+  'Ketchup': 180, 'Mustard': 365, 'Mayonnaise': 60, 'Mayo': 60, 'BBQ Sauce': 120,
+  'Salad Dressing': 90, 'Soy Sauce': 365, 'Hot Sauce': 365, 'Salsa': 14, 'Relish': 180,
+  'Syrup': 365, 'Maple Syrup': 365, 'Peanut Butter': 180, 'Almond Butter': 180, 'Jam': 180, 'Jelly': 180,
+
+  // Pantry Dry Goods
+  'Rice': 365, 'Pasta': 365, 'Flour': 365, 'Sugar': 730, 'Brown Sugar': 365,
+  'Bread': 7, 'Bagels': 7, 'Tortillas': 14, 'Cereal': 180, 'Oats': 365, 'Quinoa': 365,
+  'Olive Oil': 365, 'Vegetable Oil': 365, 'Vinegar': 730, 'Honey': 730,
+  'Chips': 60, 'Popcorn': 180, 'Pretzels': 60, 'Crackers': 90, 
+  'Nuts': 180, 'Almonds': 180, 'Walnuts': 180, 'Peanuts': 180, 'Seeds': 180,
+  'Chocolate': 365, 'Baking Soda': 365, 'Baking Powder': 365,
+
+  // Canned Goods & Broth
+  'Canned Beans': 730, 'Canned Tomatoes': 365, 'Canned Soup': 730, 'Canned Tuna': 730,
+  'Chicken Broth': 7, 'Beef Broth': 7, 'Vegetable Broth': 7, 'Stock': 7,
+
+  // Leftovers & Prepared
+  'Leftovers': 4, 'Cooked Chicken': 4, 'Cooked Beef': 4, 'Cooked Rice': 4, 'Cooked Pasta': 4, 'Meal Prep': 4
 }
 
-// Full item metadata for autocomplete
-const KNOWN_ITEMS = [
-  { name: 'Apple',          category: 'Produce',     location: 'fridge'  },
-  { name: 'Banana',         category: 'Produce',     location: 'pantry'  },
-  { name: 'Orange',         category: 'Produce',     location: 'fridge'  },
-  { name: 'Lettuce',        category: 'Produce',     location: 'fridge'  },
-  { name: 'Spinach',        category: 'Produce',     location: 'fridge'  },
-  { name: 'Carrot',         category: 'Produce',     location: 'fridge'  },
-  { name: 'Tomato',         category: 'Produce',     location: 'fridge'  },
-  { name: 'Onion',          category: 'Produce',     location: 'pantry'  },
-  { name: 'Potato',         category: 'Produce',     location: 'pantry'  },
-  { name: 'Broccoli',       category: 'Produce',     location: 'fridge'  },
-  { name: 'Cauliflower',    category: 'Produce',     location: 'fridge'  },
-  { name: 'Cucumber',       category: 'Produce',     location: 'fridge'  },
-  { name: 'Bell Pepper',    category: 'Produce',     location: 'fridge'  },
-  { name: 'Mushroom',       category: 'Produce',     location: 'fridge'  },
-  { name: 'Avocado',        category: 'Produce',     location: 'fridge'  },
-  { name: 'Strawberry',     category: 'Produce',     location: 'fridge'  },
-  { name: 'Blueberry',      category: 'Produce',     location: 'fridge'  },
-  { name: 'Grapes',         category: 'Produce',     location: 'fridge'  },
-  { name: 'Milk',           category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Eggs',           category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cheese',         category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Feta',           category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Yogurt',         category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Butter',         category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cream',          category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Sour Cream',     category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Cottage Cheese', category: 'Eggs & Dairy', location: 'fridge' },
-  { name: 'Chicken',        category: 'Meat',        location: 'fridge'  },
-  { name: 'Beef',           category: 'Meat',        location: 'fridge'  },
-  { name: 'Pork',           category: 'Meat',        location: 'fridge'  },
-  { name: 'Fish',           category: 'Meat',        location: 'fridge'  },
-  { name: 'Salmon',         category: 'Meat',        location: 'fridge'  },
-  { name: 'Ground Beef',    category: 'Meat',        location: 'fridge'  },
-  { name: 'Turkey',         category: 'Meat',        location: 'fridge'  },
-  { name: 'Bacon',          category: 'Meat',        location: 'fridge'  },
-  { name: 'Sausage',        category: 'Meat',        location: 'fridge'  },
-  { name: 'Deli Meat',      category: 'Deli',        location: 'fridge'  },
-  { name: 'Ham',            category: 'Deli',        location: 'fridge'  },
-  { name: 'Turkey Breast',  category: 'Deli',        location: 'fridge'  },
-  { name: 'Salami',         category: 'Deli',        location: 'fridge'  },
-  { name: 'Rice',           category: 'Pantry',      location: 'pantry'  },
-  { name: 'Pasta',          category: 'Pantry',      location: 'pantry'  },
-  { name: 'Flour',          category: 'Pantry',      location: 'pantry'  },
-  { name: 'Sugar',          category: 'Pantry',      location: 'pantry'  },
-  { name: 'Bread',          category: 'Pantry',      location: 'pantry'  },
-  { name: 'Cereal',         category: 'Pantry',      location: 'pantry'  },
-  { name: 'Oats',           category: 'Pantry',      location: 'pantry'  },
-  { name: 'Leftovers',      category: 'Leftovers',   location: 'fridge'  },
-]
+// Full item metadata for autocomplete automatically generated from the list above
+const KNOWN_ITEMS = Object.keys(SHELF_LIFE_DAYS).map(itemName => {
+  let cat = 'Pantry'
+  let loc = 'pantry'
+
+  if (['Apple', 'Banana', 'Orange', 'Lettuce', 'Spinach', 'Kale', 'Arugula', 'Carrot', 'Tomato', 'Broccoli', 'Cauliflower', 'Cucumber', 'Bell Pepper', 'Mushroom', 'Avocado', 'Strawberry', 'Blueberry', 'Raspberry', 'Blackberry', 'Grapes', 'Lemon', 'Lime', 'Grapefruit', 'Melon', 'Watermelon', 'Celery', 'Zucchini', 'Squash', 'Asparagus', 'Green Beans', 'Cabbage'].includes(itemName)) {
+    cat = 'Produce'; loc = 'fridge';
+  } else if (['Onion', 'Potato', 'Sweet Potato', 'Garlic'].includes(itemName)) {
+    cat = 'Produce'; loc = 'pantry';
+  } else if (['Milk', 'Eggs', 'Cheese', 'Feta', 'Yogurt', 'Greek Yogurt', 'Butter', 'Cream', 'Sour Cream', 'Cottage Cheese', 'Cream Cheese', 'Oat Milk', 'Almond Milk', 'Soy Milk', 'Nut Milk', 'Plant Milk', 'Parmesan', 'Cheddar', 'Mozzarella', 'Brie'].includes(itemName)) {
+    cat = 'Eggs & Dairy'; loc = 'fridge';
+  } else if (['Chicken', 'Chicken Breast', 'Beef', 'Steak', 'Pork', 'Pork Chop', 'Fish', 'Salmon', 'Tuna', 'Shrimp', 'Crab', 'Scallops', 'Ground Beef', 'Ground Turkey', 'Turkey', 'Bacon', 'Sausage', 'Hot Dogs'].includes(itemName)) {
+    cat = 'Meat'; loc = 'fridge';
+  } else if (['Deli Meat', 'Ham', 'Turkey Breast', 'Salami', 'Prosciutto', 'Tofu', 'Tempeh', 'Seitan', 'Hummus', 'Guacamole'].includes(itemName)) {
+    cat = 'Deli'; loc = 'fridge';
+  } else if (['Leftovers', 'Cooked Chicken', 'Cooked Beef', 'Cooked Rice', 'Cooked Pasta', 'Meal Prep'].includes(itemName)) {
+    cat = 'Leftovers'; loc = 'fridge';
+  } else if (['Juice', 'Orange Juice', 'Apple Juice', 'Lemonade', 'Kombucha', 'Beer', 'Wine', 'Ketchup', 'Mustard', 'Mayonnaise', 'Mayo', 'BBQ Sauce', 'Salad Dressing', 'Salsa', 'Relish', 'Jam', 'Jelly', 'Chicken Broth', 'Beef Broth', 'Vegetable Broth', 'Stock'].includes(itemName)) {
+    cat = 'Pantry'; loc = 'fridge'; // Usually refrigerated after opening
+  }
+  
+  return { name: itemName, category: cat, location: loc }
+})
 
 /** Calculate expiration date string (YYYY-MM-DD) from today + shelf life days */
 function calcExpirationDate(itemName, location) {
@@ -94,7 +94,6 @@ function calcExpirationDate(itemName, location) {
 
   const date = new Date()
   date.setDate(date.getDate() + adjustedDays)
-  // Format as YYYY-MM-DD for the date input
   return date.toISOString().split('T')[0]
 }
 
@@ -146,7 +145,6 @@ function AddItemPage() {
     if (name === 'name') setShowSuggestions(true)
   }
 
-  // When user picks a suggestion: fill name, category, location, AND expiration date
   const handleSuggestionClick = (item) => {
     const expirationDate = calcExpirationDate(item.name, item.location)
     setFormData(prev => ({
@@ -253,7 +251,6 @@ function AddItemPage() {
     }
   }
 
-  // ── Select Mode ──
   if (mode === 'select') {
     return (
       <div className="add-item-page">
@@ -282,7 +279,6 @@ function AddItemPage() {
     )
   }
 
-  // ── Review Mode ──
   if (mode === 'review') {
     return (
       <div className="add-item-page review-mode">
@@ -342,7 +338,6 @@ function AddItemPage() {
     )
   }
 
-  // ── Manual Entry Mode ──
   return (
     <div className="add-item-page">
       <header className="add-header">
@@ -352,7 +347,6 @@ function AddItemPage() {
       </header>
       <form className="add-form" onSubmit={handleSubmit}>
 
-        {/* Name with autocomplete */}
         <div className="form-group autocomplete-wrapper">
           <label>Item Name</label>
           <input

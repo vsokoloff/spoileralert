@@ -70,14 +70,13 @@ EXPIRATION_DATABASE: Dict[str, int] = {
     "cabbage": 10, "celery": 10, "asparagus": 4,
     "mushroom": 2,
     "pepper": 10, "bell pepper": 10, "chili pepper": 10,
-    # FIX: green bean is PRO_08 cruciferous/fleshy — 4 days, not 7
     "green bean": 4, "beans green": 4, "string bean": 4, "snap pea": 4,
 
     # PRO_09 Melons — 7 days
     "melon": 7, "watermelon": 7, "cantaloupe": 7, "honeydew": 7,
 
     # Individual produce
-    "avocado": 3, "banana": 7, "mango": 4, "pineapple": 4,  # banana = counter life ~7 days
+    "avocado": 3, "banana": 7, "mango": 4, "pineapple": 4,
     "peach": 3, "plum": 3, "apricot": 3,
 
     # DAI_01 Liquid Dairy — 7 days
@@ -97,9 +96,6 @@ EXPIRATION_DATABASE: Dict[str, int] = {
     # DAI_05 Non-Dairy Milks — 8 days (opened)
     "oat milk": 8, "almond milk": 8, "soy milk": 8, "coconut milk": 8,
     "nut milk": 8, "plant milk": 8, "cashew milk": 8, "macadamia milk": 8,
-
-    # Add these under Leftovers
-    "cooked": 4, "leftover": 3, "prepared": 4, "meal prep": 4,
 
     # General dairy
     "yogurt": 14, "greek yogurt": 14, "butter": 30, "sour cream": 14, "kefir": 14,
@@ -128,14 +124,33 @@ EXPIRATION_DATABASE: Dict[str, int] = {
     # MEA_07 Processed/Cured Meats — 10 days
     "bacon": 10, "sausage": 10, "hot dog": 10, "pepperoni": 10,
 
-    # DEL_01 Deli Salads / Dips — 5 days
+    # DEL_01 Deli Salads / Dips & Plant-based
     "deli meat": 5, "ham": 5, "turkey breast": 5, "salami": 5,
     "prosciutto": 5, "roast beef": 5, "pastrami": 5, "hummus": 5,
+    "tofu": 7, "tempeh": 7, "seitan": 7, "guacamole": 3,
+
+    # Beverages
+    "juice": 14, "orange juice": 14, "apple juice": 14, "lemonade": 14,
+    "soda": 365, "water": 730, "sparkling water": 365, "kombucha": 30,
+    "coffee": 365, "tea": 365, "beer": 180, "wine": 5,
+
+    # Condiments & Sauces
+    "mayonnaise": 60, "mayo": 60, "salad dressing": 90, "bbq sauce": 120,
+    "salsa": 14, "relish": 180, "syrup": 365, "maple syrup": 365, "hot sauce": 365,
+    "ketchup": 180, "mustard": 365, "soy sauce": 365, "jam": 180, "jelly": 180,
+    "peanut butter": 365, "almond butter": 365,
+
+    # Snacks & Dry Goods
+    "chips": 60, "popcorn": 180, "nuts": 180, "almond": 180, "walnut": 180,
+    "peanut": 180, "seeds": 180, "pretzels": 60, "chocolate": 365, "cracker": 90,
 
     # Pantry — PAN_01/02 Canned
     "canned tomato": 365, "canned fruit": 365, "canned peach": 365,
     "canned bean": 730, "canned corn": 730, "canned soup": 730,
     "canned vegetable": 730, "canned meat": 730,
+
+    # Broths (Opened)
+    "broth": 7, "stock": 7, "chicken broth": 7, "beef broth": 7, "vegetable broth": 7,
 
     # Pantry — PAN_03 Dry Grains
     "rice": 730, "pasta": 730, "oat": 730, "oatmeal": 730,
@@ -143,29 +158,24 @@ EXPIRATION_DATABASE: Dict[str, int] = {
 
     # Pantry — PAN_04 Baking & Spices
     "sugar": 730, "salt": 730, "baking powder": 270, "baking soda": 270,
-
-    # Pantry — PAN_05 Condiments
-    "ketchup": 365, "mustard": 365, "hot sauce": 365, "soy sauce": 365,
-    "olive oil": 365, "vegetable oil": 365, "vinegar": 730,
-    "honey": 730, "jam": 365, "jelly": 365,
-    "peanut butter": 365, "almond butter": 365,
+    "olive oil": 365, "vegetable oil": 365, "vinegar": 730, "honey": 730,
 
     # Pantry — PAN_06 Bread
-    "bread": 21, "bagel": 14, "tortilla": 14, "cracker": 90,
+    "bread": 21, "bagel": 14, "tortilla": 14,
 
     # Leftovers — 3-4 days
     "leftover": 3, "cooked rice": 4, "cooked pasta": 4, "cooked meat": 4,
     "cooked poultry": 4, "cooked soup": 4, "cooked stew": 4,
-    "pizza": 4, "casserole": 4,
+    "pizza": 4, "casserole": 4, "cooked": 4, "prepared": 4, "meal prep": 4,
 }
 
 CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
     CategoryType.PRODUCE: [
-        "apple", "pear", "grape", "cherry", "fig", "nectarine",
+        "apple", "pear", "grape", "cherry", "fig", "nectarine", "guacamole",
         "orange", "lemon", "lime", "clementine", "grapefruit", "mandarin",
         "strawberry", "blueberry", "blackberry", "raspberry", "berry",
         "lettuce", "spinach", "arugula", "kale", "basil", "cilantro",
-        "parsley", "mint", "chard", "collard", "herb",
+        "parsley", "mint", "chard", "collard", "herb", "celery", "cabbage",
         "carrot", "beet", "turnip", "parsnip", "radish", "ginger",
         "onion", "garlic", "potato", "sweet potato", "shallot",
         "tomato", "cucumber", "eggplant", "zucchini", "squash", "corn",
@@ -181,7 +191,7 @@ CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
         "cream cheese", "goat cheese", "cheddar", "parmesan", "parm",
         "gouda", "swiss", "provolone", "romano",
         "egg", "yogurt", "greek yogurt", "butter", "sour cream", "kefir",
-        "oat milk", "almond milk", "soy milk", "coconut milk", "nut milk", "plant milk", # <-- Added here
+        "oat milk", "almond milk", "soy milk", "coconut milk", "nut milk", "plant milk",
         "dairy", "cheese",
     ],
     CategoryType.MEAT: [
@@ -195,7 +205,7 @@ CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
     CategoryType.DELI: [
         "deli", "ham", "turkey breast", "salami", "prosciutto",
         "roast beef", "pastrami", "hummus", "hot dog", "pepperoni",
-        "cold cut",
+        "cold cut", "tofu", "tempeh", "seitan",
     ],
     CategoryType.PANTRY: [
         "rice", "pasta", "oat", "quinoa", "flour", "cereal",
@@ -203,7 +213,11 @@ CATEGORY_KEYWORDS: Dict[CategoryType, list] = {
         "almond butter", "ketchup", "mustard", "hot sauce", "soy sauce",
         "olive oil", "vegetable oil", "vinegar", "bread", "bagel",
         "tortilla", "cracker", "canned", "bean", "lentil", "grain",
-        "baking", "spice", "condiment",
+        "baking", "spice", "condiment", "juice", "soda", "water", 
+        "tea", "coffee", "wine", "beer", "mayonnaise", "mayo", 
+        "salad dressing", "bbq sauce", "salsa", "relish", "syrup", 
+        "chips", "popcorn", "nuts", "almond", "walnut", "peanut", 
+        "seed", "pretzel", "chocolate", "broth", "stock", "kombucha"
     ],
     CategoryType.FREEZER: [
         "frozen", "ice cream", "tv dinner", "chicken nugget",
@@ -248,16 +262,10 @@ def get_expiration_date(item_name: str, purchase_date: Optional[datetime] = None
             if key in item_lower or item_lower in key:
                 shelf_life_days = days
                 break
-    # 2. Fall back to raw lowercase name
-    if shelf_life_days is None:
-        for key, days in EXPIRATION_DATABASE.items():
-            if key in item_lower or item_lower in key:
-                shelf_life_days = days
-                break
                 
-    # NEW STEP: 2.5 Smart Generic Fallbacks
+    # 2.5 Smart Generic Fallbacks
     if shelf_life_days is None:
-        if "cooked" in item_lower or "leftover" in item_lower:
+        if "cooked" in item_lower or "leftover" in item_lower or "prepared" in item_lower:
             shelf_life_days = 4 # Default for cooked generics
         elif "milk" in item_lower:
             shelf_life_days = 7 # Default for unknown milks
@@ -265,6 +273,8 @@ def get_expiration_date(item_name: str, purchase_date: Optional[datetime] = None
             shelf_life_days = 10 # Default for unknown cheeses
         elif "meat" in item_lower or "beef" in item_lower or "chicken" in item_lower:
             shelf_life_days = 3 # Default for unknown meats
+        elif "juice" in item_lower:
+            shelf_life_days = 14 # Default for unknown juices
 
     # 3. Category-based default
     if shelf_life_days is None:
