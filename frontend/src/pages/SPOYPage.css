@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100vh;
   background: var(--bg-primary);
-  /* NEW: Add padding and box-sizing to lift the input above the bottom nav */
+  /* Add padding and box-sizing to lift the input above the bottom nav */
   padding-bottom: 80px; 
   box-sizing: border-box;
 }
@@ -29,8 +29,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  /* Changed from Purple to Emerald Green */
-  background: linear-gradient(135deg, #059669, #10b981);
+  /* Dark Forest Green */
+  background: linear-gradient(135deg, #166534, #15803d);
   color: white;
   font-weight: 700;
   font-size: 16px;
@@ -76,8 +76,8 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  /* Changed from Purple to Emerald Green */
-  background: linear-gradient(135deg, #059669, #10b981);
+  /* Dark Forest Green */
+  background: linear-gradient(135deg, #166534, #15803d);
   color: white;
   font-weight: 700;
   font-size: 28px;
@@ -128,8 +128,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  /* Changed from Purple to Emerald Green */
-  background: linear-gradient(135deg, #059669, #10b981);
+  /* Dark Forest Green */
+  background: linear-gradient(135deg, #166534, #15803d);
   color: white;
   font-weight: 700;
   font-size: 12px;
@@ -150,8 +150,8 @@
 }
 
 .message.user .message-content {
-  /* Changed from Purple to Emerald Green */
-  background: linear-gradient(135deg, #059669, #10b981);
+  /* Dark Forest Green */
+  background: linear-gradient(135deg, #166534, #15803d);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -219,10 +219,10 @@
   white-space: nowrap;
   padding: 7px 14px;
   border-radius: 20px;
-  /* Changed from Purple to Emerald Green */
-  border: 1px solid #059669;
+  /* Dark Forest Green */
+  border: 1px solid #166534;
   background: transparent;
-  color: #059669;
+  color: #166534;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -231,8 +231,8 @@
 }
 
 .suggestion-chip:hover:not(:disabled) {
-  /* Changed from Purple to Emerald Green */
-  background: #059669;
+  /* Dark Forest Green */
+  background: #166534;
   color: white;
 }
 
@@ -257,22 +257,22 @@
   flex: 1;
   padding: 14px 18px;
   background: var(--bg-card);
-  /* Changed from Purple to Emerald Green */
-  border: 2px solid #059669;
+  /* Dark Forest Green */
+  border: 2px solid #166534;
   border-radius: 24px;
   color: var(--text-primary);
   font-size: 16px;
   outline: none;
-  /* Changed box-shadow glow to Green */
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+  /* Dark Green Glow */
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.15);
   transition: all 0.2s ease;
 }
 
 .message-input:focus {
-  /* Changed from Purple to darker Green */
-  border-color: #047857;
-  /* Changed box-shadow glow to Green */
-  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
+  /* Even Darker Green for Focus */
+  border-color: #14532d;
+  /* Dark Green Glow */
+  box-shadow: 0 4px 16px rgba(22, 101, 52, 0.3);
 }
 
 .message-input::placeholder {
@@ -285,8 +285,8 @@
 }
 
 .send-btn {
-  /* Changed from Purple to Emerald Green */
-  background: linear-gradient(135deg, #059669, #10b981);
+  /* Dark Forest Green */
+  background: linear-gradient(135deg, #166534, #15803d);
   color: white;
   border: none;
   border-radius: 50%;
