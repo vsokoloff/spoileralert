@@ -5,7 +5,8 @@ import { createItem } from '../api/items'
 import { scanReceipt, confirmReceiptItems } from '../api/receipt'
 import './AddItemPage.css'
 
-const CATEGORIES = ['Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
+// 1. ADDED 'Auto-detect' to the top of the list
+const CATEGORIES = ['Auto-detect', 'Deli', 'Eggs & Dairy', 'Produce', 'Freezer', 'Pantry', 'Meat', 'Leftovers']
 const LOCATIONS = ['fridge', 'freezer', 'pantry']
 
 // Shelf life in days, mirrored from expiration_db.py.
@@ -109,7 +110,7 @@ function AddItemPage() {
   const [formData, setFormData] = useState({
     name: '',
     quantity: 1,
-    category: 'Produce',
+    category: 'Auto-detect', // 2. Default is now Auto-detect
     location: 'fridge',
     expiration_date: '',
     purchase_date: '',
@@ -173,11 +174,16 @@ function AddItemPage() {
       const itemData = {
         name: formData.name,
         quantity: parseFloat(formData.quantity) || 1.0,
-        category: formData.category,
         location: formData.location,
         purchase_date: purchaseDate,
         consumed: false,
         shared_with: formData.shared_with || null,
+      }
+
+      // 3. ONLY send the category if they manually picked one. 
+      // Otherwise, the backend will auto-detect it using AI.
+      if (formData.category && formData.category !== 'Auto-detect') {
+        itemData.category = formData.category
       }
 
       if (expirationDate) itemData.expiration_date = expirationDate
@@ -205,7 +211,12 @@ function AddItemPage() {
             const base64 = event.target.result.split(',')[1]
             try {
               const result = await scanReceipt(base64)
-              setScannedItems(result.items)
+              // Ensure scanned items default to Auto-detect if AI didn't catch it
+              const mappedItems = result.items.map(item => ({
+                ...item,
+                category: item.category || 'Auto-detect'
+              }))
+              setScannedItems(mappedItems)
               setMode('review')
             } catch (error) {
               console.error('Error:', error)
@@ -237,12 +248,26 @@ function AddItemPage() {
 
   const handleConfirmScanned = async () => {
     try {
-      const items = scannedItems.map(item => ({
-        ...item,
-        quantity: parseFloat(item.quantity) || 1.0,
-        purchase_date: new Date().toISOString(),
-        consumed: false,
-      }))
+      const items = scannedItems.map(item => {
+        const payload = {
+          name: item.name,
+          quantity: parseFloat(item.quantity) || 1.0,
+          location: item.location || 'fridge',
+          purchase_date: new Date().toISOString(),
+          consumed: false,
+        }
+        
+        // 4. Same AI allowance for receipt scanning
+        if (item.category && item.category !== 'Auto-detect') {
+          payload.category = item.category
+        }
+        if (item.expiration_date) {
+          payload.expiration_date = item.expiration_date
+        }
+        
+        return payload
+      })
+      
       await confirmReceiptItems(items)
       navigate('/')
     } catch (error) {
