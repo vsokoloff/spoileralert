@@ -49,7 +49,7 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.ItemResponse)
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-    """Create a new item with auto-categorization and expiration"""
+    """Create a new item with auto-categorization, auto-routing, and expiration"""
     try:
         # exclude_unset ensures we don't get None values for omitted fields
         item_dict = item.dict(exclude_unset=True)
@@ -59,6 +59,18 @@ def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
             item_dict['category'] = categorize_item(item_dict['name'])
         elif isinstance(item_dict.get('category'), str):
             item_dict['category'] = models.CategoryType(item_dict['category'])
+
+        # --- NEW: AUTO-ROUTE LOCATION ---
+        # Get the string value of the category we just assigned
+        cat_val = item_dict['category'].value if hasattr(item_dict['category'], 'value') else item_dict['category']
+        
+        # If it's a Pantry category, automatically force the location to pantry
+        if cat_val == "Pantry":
+            item_dict['location'] = models.LocationType.PANTRY
+        # If it's a Freezer category, automatically force the location to freezer
+        elif cat_val == "Freezer":
+            item_dict['location'] = models.LocationType.FREEZER
+        # --------------------------------
 
         # 2. Auto-Compute Expiration Date if missing
         if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
