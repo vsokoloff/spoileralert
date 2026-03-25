@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send } from 'lucide-react'
-import { chatWithSPOY, getSPOYHistory, getAutoRecommendations } from '../api/spoy'
+import { chatWithSPOY, getAutoRecommendations } from '../api/spoy'
 import './SPOYPage.css'
 
 const QUICK_SUGGESTIONS = [
@@ -36,17 +36,16 @@ function MessageText({ content }) {
 
 function SPOYPage() {
   const navigate = useNavigate()
-  // 1. Set an instant default greeting instead of an empty array
+  
+  // Instant default greeting
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! I'm SPOY, your kitchen assistant. \n\nI can help you figure out what to make with the ingredients in your fridge. What are you in the mood for?" }
+    { role: 'assistant', content: "Hi! I'm SPOY, your kitchen assistant. \n\nI can help you figure out what to make with the exact ingredients in your fridge. What are you in the mood for?" }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  // 2. Remove the loadAutoRecommendations useEffect completely.
-  // Just keep the scroll-to-bottom one.
   useEffect(() => {
     scrollToBottom()
   }, [messages, loading])
@@ -88,7 +87,6 @@ function SPOYPage() {
       setLoading(true)
       
       try {
-        // This calls the specific /auto-recommend endpoint on your backend
         const response = await getAutoRecommendations()
         setMessages(prev => [...prev, { role: 'assistant', content: response.response }])
       } catch (error) {
@@ -107,8 +105,6 @@ function SPOYPage() {
     }
   }
 
-  const showSuggestions = !autoLoading && messages.length <= 1
-
   return (
     <div className="spoy-page">
       <header className="spoy-header">
@@ -126,7 +122,6 @@ function SPOYPage() {
       </header>
 
       <div className="messages-container">
-        <div className="messages-container">
         {/* Messages */}
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.role}`}>
@@ -137,7 +132,7 @@ function SPOYPage() {
           </div>
         ))}
 
-        {/* Typing indicator (only shows when user sends a message) */}
+        {/* Typing indicator */}
         {loading && (
           <div className="message assistant">
             <div className="msg-avatar">S</div>
@@ -154,18 +149,6 @@ function SPOYPage() {
 
       {/* Quick suggestions - only show if there's only the greeting */}
       {messages.length === 1 && (
-        <div className="suggestions-row">
-          {QUICK_SUGGESTIONS.map((s) => (
-            <button key={s} className="suggestion-chip" onClick={() => handleSuggestion(s)} disabled={loading}>
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-      </div>
-
-      {/* Quick suggestions */}
-      {showSuggestions && (
         <div className="suggestions-row">
           {QUICK_SUGGESTIONS.map((s) => (
             <button key={s} className="suggestion-chip" onClick={() => handleSuggestion(s)} disabled={loading}>
