@@ -5,6 +5,7 @@ A food tracking app that helps users manage their fridge inventory, track expira
 ## Features
 
 - **Fridge Inventory Management**: Track items with categories, locations, and expiration dates
+- **Receipt Scanning**: Automatically extract items from grocery receipts using Google Vision API
 - **SPOY AI Assistant**: Get personalized recipe recommendations based on what's in your fridge
 - **Color-Coded Status**: Visual indicators for expiration urgency (red/yellow/green/blue/black)
 - **In-App Notifications**: Get notified about expiring items
