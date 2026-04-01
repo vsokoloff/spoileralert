@@ -1,219 +1,208 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+"""
+backend/app/routers/spoy.py
+
+Uses Google Gemini (free tier) instead of OpenAI.
+
+Setup:
+1. Go to https://aistudio.google.com/app/apikey
+2. Click "Create API Key" (free, no billing required)
+3. Add to your .env:
+       GEMINI_API_KEY=your_key_here
+4. Add to requirements.txt:
+       google-generativeai
+"""
+
 import os
-from openai import OpenAI
-from app.database import get_db
-from app import models, schemas
-from app.expiration_db import get_color_code
 from datetime import datetime, timedelta
 from typing import List
 
+import google.generativeai as genai
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app import models, schemas
+from app.auth import get_current_user
+from app.database import get_db
+
 router = APIRouter()
 
-DEFAULT_USER_ID = 1
 
-def get_user_fridge_items(db: Session) -> List[dict]:
-    """Get current fridge items for SPOY context"""
-    items = db.query(models.Item).filter(
-        models.Item.user_id == DEFAULT_USER_ID,
-        models.Item.consumed == False,
-        models.Item.expiration_date > datetime.now()
-    ).all()
-    
-    return [{
-        "name": item.name,
-        "category": item.category.value if hasattr(item.category, 'value') else str(item.category),
-        "expiration_date": item.expiration_date.isoformat(),
-        "days_left": (item.expiration_date - datetime.now()).days
-    } for item in items]
+# ── Gemini setup ───────────────────────────────────────────────────────────────
 
-def get_expiring_soon_items(db: Session, days: int = 3) -> List[dict]:
-    """Get items expiring within specified days"""
-    cutoff_date = datetime.now() + timedelta(days=days)
+def _get_gemini_model():
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel(
+        model_name="gemini-1.5-flash",   # free tier model
+        generation_config={"max_output_tokens": 400, "temperature": 0.7},
+    )
+
+
+# ── Fridge helpers ─────────────────────────────────────────────────────────────
+
+def _fridge_items(user_id: int, db: Session) -> List[dict]:
     items = db.query(models.Item).filter(
-        models.Item.user_id == DEFAULT_USER_ID,
+        models.Item.user_id == user_id,
         models.Item.consumed == False,
-        models.Item.expiration_date <= cutoff_date,
-        models.Item.expiration_date >= datetime.now()
+        models.Item.expiration_date > datetime.now(),
     ).all()
-    
-    return [{
-        "name": item.name,
-        "category": item.category.value if hasattr(item.category, 'value') else str(item.category),
-        "expiration_date": item.expiration_date.isoformat(),
-        "days_left": (item.expiration_date - datetime.now()).days
-    } for item in items]
+    return [
+        {
+            "name": item.name,
+            "category": item.category.value if hasattr(item.category, "value") else str(item.category),
+            "expiration_date": item.expiration_date.isoformat(),
+            "days_left": (item.expiration_date - datetime.now()).days,
+        }
+        for item in items
+    ]
+
+
+def _expiring_soon(user_id: int, db: Session, days: int = 3) -> List[dict]:
+    cutoff = datetime.now() + timedelta(days=days)
+    items = db.query(models.Item).filter(
+        models.Item.user_id == user_id,
+        models.Item.consumed == False,
+        models.Item.expiration_date <= cutoff,
+        models.Item.expiration_date >= datetime.now(),
+    ).all()
+    return [
+        {
+            "name": item.name,
+            "category": item.category.value if hasattr(item.category, "value") else str(item.category),
+            "expiration_date": item.expiration_date.isoformat(),
+            "days_left": (item.expiration_date - datetime.now()).days,
+        }
+        for item in items
+    ]
+
+
+def _system_prompt(items_list: str, expiring_list: str) -> str:
+    return f"""You are SPOY, a helpful AI kitchen assistant for the Spoiler Alert app.
+Your job is to suggest recipes based on what the user has in their fridge, especially items expiring soon.
+
+Current fridge contents: {items_list or "nothing"}
+Expiring within 3 days: {expiring_list or "none"}
+
+Rules:
+1. Only suggest recipes using the ingredients listed above.
+2. Prioritise items expiring soon.
+3. If there are not enough ingredients for a full meal, say so and suggest the best option available.
+4. Politely decline any question not related to food, cooking, or fridge inventory.
+5. Keep responses concise and friendly."""
+
+
+def _save_conversation(user_id: int, message: str, response: str, db: Session):
+    db.add(models.SPOYConversation(user_id=user_id, message=message, response=response))
+    db.commit()
+
+
+# ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @router.get("/auto-recommend", response_model=schemas.SPOYResponse)
-def get_auto_recommendations(db: Session = Depends(get_db)):
-    """Automatically get recipe recommendations for expiring items"""
+def get_auto_recommendations(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Automatically suggest recipes for items expiring soon."""
+    expiring = _expiring_soon(current_user.id, db)
+
+    if not expiring:
+        return schemas.SPOYResponse(
+            response="Great news! You don't have any items expiring in the next 3 days. Your fridge is looking good! 🎉",
+            suggested_items=[],
+        )
+
+    fridge = _fridge_items(current_user.id, db)
+    expiring_names = [i["name"] for i in expiring]
+    items_list = ", ".join(i["name"] for i in fridge)
+    expiring_list = ", ".join(expiring_names)
+
+    model = _get_gemini_model()
+    if not model:
+        return schemas.SPOYResponse(
+            response=(
+                f"You have {len(expiring)} item(s) expiring soon: {expiring_list}.\n\n"
+                "Set GEMINI_API_KEY in your .env to get AI-powered recipe suggestions!"
+            ),
+            suggested_items=expiring_names[:3],
+        )
+
     try:
-        # Get items expiring soon
-        expiring_soon = get_expiring_soon_items(db, days=3)
-        
-        if not expiring_soon:
-            return schemas.SPOYResponse(
-                response="Great news! You don't have any items expiring in the next 3 days. Your fridge is looking good! 🎉",
-                suggested_items=[]
-            )
-        
-        # Get all fridge items for context
-        fridge_items = get_user_fridge_items(db)
-        
-        # Build context
-        expiring_names = [item["name"] for item in expiring_soon]
-        expiring_list = ", ".join(expiring_names)
-        items_list = ", ".join([item["name"] for item in fridge_items])
-        
-        # Create auto-recommendation prompt
-        auto_prompt = f"""You have {len(expiring_soon)} items expiring soon: {expiring_list}
-
-Here are some recipes to help you use them up:
-
-"""
-        
-        system_prompt = f"""You are SPOY, a strict but helpful AI kitchen assistant for the Spoiler Alert app. 
-
-Current items in fridge: {items_list}
-Items expiring soon (less than 3 days): {expiring_list}
-
-STRICT RULES YOU MUST FOLLOW:
-1. ONLY suggest recipes using the exact ingredients listed in the user's fridge above. Do NOT assume they have basic pantry staples (like oil, salt, flour) unless it is in their list. Do NOT add outside ingredients unless the user explicitly asks.
-2. If they lack enough ingredients to make a full meal, suggest the best possible combination of what they DO have, or politely tell them they need more groceries.
-3. REFUSE to answer any questions that are not related to food, cooking, recipes, or fridge inventory. If asked a non-food question, politely reply: "I am a kitchen assistant and can only help with food and recipe-related questions."
-4. Keep responses concise and friendly."""
-        
-        
-        # Call OpenAI API
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            # Mock response for MVP if API key not set
-            return schemas.SPOYResponse(
-                response=f"You have {len(expiring_soon)} items expiring soon: {expiring_list}\n\nHere are some quick recipe ideas:\n1. Use {expiring_names[0]} in a stir-fry or salad\n2. Combine {expiring_names[0]} with other ingredients for a quick meal\n3. Make a simple dish using {expiring_names[0]}\n\nNote: OpenAI API key not configured. Set OPENAI_API_KEY for AI-powered recommendations.",
-                suggested_items=expiring_names[:3]
-            )
-        
-        # Initialize OpenAI client without proxies (Render may have proxy env vars)
-        client = OpenAI(
-            api_key=api_key,
-            timeout=30.0,
-            max_retries=2
+        prompt = (
+            _system_prompt(items_list, expiring_list)
+            + f"\n\nThe user has {len(expiring)} item(s) expiring soon: {expiring_list}. "
+            "Please suggest recipes to use them up."
         )
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": auto_prompt}
-            ],
-            max_tokens=400,
-            temperature=0.7
-        )
-        
-        ai_response = response.choices[0].message.content
-        
-        # Save conversation
-        conversation = models.SPOYConversation(
-            user_id=DEFAULT_USER_ID,
-            message="Auto-recommendation",
-            response=ai_response
-        )
-        db.add(conversation)
-        db.commit()
-        
-        return schemas.SPOYResponse(
-            response=ai_response,
-            suggested_items=expiring_names[:3]
-        )
+        result = model.generate_content(prompt)
+        ai_response = result.text
+        _save_conversation(current_user.id, "Auto-recommendation", ai_response, db)
+        return schemas.SPOYResponse(response=ai_response, suggested_items=expiring_names[:3])
+
     except Exception as e:
-        # Fallback response
-        expiring_soon = get_expiring_soon_items(db, days=3)
-        expiring_names = [item["name"] for item in expiring_soon] if expiring_soon else []
         return schemas.SPOYResponse(
-            response=f"I'm having trouble right now. Error: {str(e)}. Please try again!",
-            suggested_items=expiring_names[:3]
+            response=f"I'm having trouble right now ({e}). Please try again!",
+            suggested_items=expiring_names[:3],
         )
+
 
 @router.post("/chat", response_model=schemas.SPOYResponse)
-def chat_with_spoy(message: schemas.SPOYMessage, db: Session = Depends(get_db)):
-    """Chat with SPOY AI assistant for recipe recommendations"""
+def chat_with_spoy(
+    message: schemas.SPOYMessage,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Chat with SPOY for recipe recommendations."""
+    fridge = _fridge_items(current_user.id, db)
+    expiring = [i for i in fridge if i["days_left"] < 3]
+    items_list = ", ".join(i["name"] for i in fridge)
+    expiring_list = ", ".join(i["name"] for i in expiring)
+
+    model = _get_gemini_model()
+    if not model:
+        return schemas.SPOYResponse(
+            response="GEMINI_API_KEY is not configured. Add it to your .env to enable SPOY.",
+            suggested_items=[i["name"] for i in expiring[:3]],
+        )
+
     try:
-        # Get user's current fridge items
-        fridge_items = get_user_fridge_items(db)
-        
-        # Find items expiring soon
-        expiring_soon = [item for item in fridge_items if item["days_left"] < 3]
-        
-        # Build context for OpenAI
-        items_list = ", ".join([item["name"] for item in fridge_items])
-        expiring_list = ", ".join([item["name"] for item in expiring_soon]) if expiring_soon else "none"
-        
-        system_prompt = f"""You are SPOY, a helpful AI assistant for the Spoiler Alert app. 
-Your role is to suggest recipes based on what the user has in their fridge, especially items that are expiring soon.
-
-Current items in fridge: {items_list}
-Items expiring soon (less than 3 days): {expiring_list}
-
-Provide helpful, quick recipe suggestions that use the items the user has, prioritizing items that are expiring soon.
-Keep responses concise and friendly. If the user asks about items not in their fridge, politely let them know."""
-
-        # Call OpenAI API
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            # Mock response for MVP if API key not set
-            return schemas.SPOYResponse(
-                response="I'd be happy to help! However, the OpenAI API key is not configured. Please set OPENAI_API_KEY in your environment variables.",
-                suggested_items=[item["name"] for item in expiring_soon[:3]]
-            )
-        
-        # Initialize OpenAI client without proxies (Render may have proxy env vars)
-        client = OpenAI(
-            api_key=api_key,
-            timeout=30.0,
-            max_retries=2
-        )
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message.message}
-            ],
-            max_tokens=300,
-            temperature=0.7
-        )
-        
-        ai_response = response.choices[0].message.content
-        
-        # Save conversation
-        conversation = models.SPOYConversation(
-            user_id=DEFAULT_USER_ID,
-            message=message.message,
-            response=ai_response
-        )
-        db.add(conversation)
-        db.commit()
-        
+        prompt = _system_prompt(items_list, expiring_list) + f"\n\nUser: {message.message}"
+        result = model.generate_content(prompt)
+        ai_response = result.text
+        _save_conversation(current_user.id, message.message, ai_response, db)
         return schemas.SPOYResponse(
             response=ai_response,
-            suggested_items=[item["name"] for item in expiring_soon[:3]]
-        )
-    except Exception as e:
-        # Fallback response
-        return schemas.SPOYResponse(
-            response=f"I'm having trouble right now. Error: {str(e)}. Please try again!",
-            suggested_items=[]
+            suggested_items=[i["name"] for i in expiring[:3]],
         )
 
+    except Exception as e:
+        return schemas.SPOYResponse(
+            response=f"I'm having trouble right now ({e}). Please try again!",
+            suggested_items=[],
+        )
+
+
 @router.get("/history")
-def get_spoy_history(db: Session = Depends(get_db), limit: int = 10):
-    """Get SPOY conversation history"""
-    conversations = db.query(models.SPOYConversation).filter(
-        models.SPOYConversation.user_id == DEFAULT_USER_ID
-    ).order_by(models.SPOYConversation.created_at.desc()).limit(limit).all()
-    
-    return [{
-        "id": c.id,
-        "message": c.message,
-        "response": c.response,
-        "created_at": c.created_at.isoformat()
-    } for c in conversations]
+def get_spoy_history(
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Return SPOY conversation history for the current user."""
+    conversations = (
+        db.query(models.SPOYConversation)
+        .filter(models.SPOYConversation.user_id == current_user.id)
+        .order_by(models.SPOYConversation.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": c.id,
+            "message": c.message,
+            "response": c.response,
+            "created_at": c.created_at.isoformat(),
+        }
+        for c in conversations
+    ]

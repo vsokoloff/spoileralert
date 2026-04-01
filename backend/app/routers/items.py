@@ -1,17 +1,39 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+"""
+backend/app/routers/items.py
+
+Every endpoint now requires a valid JWT token.
+The authenticated user's ID replaces the old DEFAULT_USER_ID = 1.
+"""
+
+import json
+from datetime import datetime
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app import models, schemas
-# ADDED imports for auto-categorization and expiration logic
+from app.auth import get_current_user
 from app.expiration_db import get_color_code, get_expiration_date, categorize_item
-from datetime import datetime
 
 router = APIRouter()
 
-# For MVP, we'll use a default user_id (1)
-# In production, this would come from authentication
-DEFAULT_USER_ID = 1
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+def _owned_item(item_id: int, user_id: int, db: Session) -> models.Item:
+    """Fetch an item that belongs to the current user, or raise 404."""
+    item = db.query(models.Item).filter(
+        models.Item.id == item_id,
+        models.Item.user_id == user_id,
+    ).first()
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return item
+
+
+# ── Read ───────────────────────────────────────────────────────────────────────
 
 @router.get("/", response_model=List[schemas.ItemResponse])
 def get_items(
@@ -19,11 +41,14 @@ def get_items(
     location: Optional[str] = None,
     search: Optional[str] = None,
     expired_only: bool = False,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
-    """Get all items with optional filtering"""
-    query = db.query(models.Item).filter(models.Item.user_id == DEFAULT_USER_ID)
-    
+    """Return all non-consumed items belonging to the current user."""
+    query = db.query(models.Item).filter(
+        models.Item.user_id == current_user.id,
+        models.Item.consumed == False,
+    )
     if category:
         query = query.filter(models.Item.category == category)
     if location:
@@ -32,133 +57,152 @@ def get_items(
         query = query.filter(models.Item.name.ilike(f"%{search}%"))
     if expired_only:
         query = query.filter(models.Item.expiration_date < datetime.now())
-    
-    items = query.filter(models.Item.consumed == False).all()
-    return items
+
+    return query.all()
+
+
+@router.get("/deleted/recent", response_model=List[dict])
+def get_recently_deleted(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Return up to 10 recently deleted items for the current user."""
+    deleted = (
+        db.query(models.DeletedItem)
+        .filter(models.DeletedItem.user_id == current_user.id)
+        .order_by(models.DeletedItem.deleted_at.desc())
+        .limit(10)
+        .all()
+    )
+    return [
+        {
+            "id": d.id,
+            "name": d.name,
+            "deleted_at": d.deleted_at,
+            "original_data": d.original_data,
+        }
+        for d in deleted
+    ]
+
 
 @router.get("/{item_id}", response_model=schemas.ItemResponse)
-def get_item(item_id: int, db: Session = Depends(get_db)):
-    """Get a specific item"""
-    item = db.query(models.Item).filter(
-        models.Item.id == item_id,
-        models.Item.user_id == DEFAULT_USER_ID
-    ).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return item
+def get_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return _owned_item(item_id, current_user.id, db)
 
-@router.post("/", response_model=schemas.ItemResponse)
-def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-    """Create a new item with auto-categorization, auto-routing, and expiration"""
+
+# ── Create ─────────────────────────────────────────────────────────────────────
+
+@router.post("/", response_model=schemas.ItemResponse, status_code=status.HTTP_201_CREATED)
+def create_item(
+    item: schemas.ItemCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Create a new item with auto-categorisation and expiration logic."""
     try:
-        # exclude_unset ensures we don't get None values for omitted fields
         item_dict = item.dict(exclude_unset=True)
-        
-        # 1. Auto-Categorize if missing
-        if 'category' not in item_dict or item_dict['category'] is None:
-            item_dict['category'] = categorize_item(item_dict['name'])
-        elif isinstance(item_dict.get('category'), str):
-            item_dict['category'] = models.CategoryType(item_dict['category'])
 
-        # --- NEW: AUTO-ROUTE LOCATION ---
-        # Get the string value of the category we just assigned
-        cat_val = item_dict['category'].value if hasattr(item_dict['category'], 'value') else item_dict['category']
-        
-        # If it's a Pantry category, automatically force the location to pantry
+        # 1. Auto-categorise if missing
+        if not item_dict.get("category"):
+            item_dict["category"] = categorize_item(item_dict["name"])
+        elif isinstance(item_dict.get("category"), str):
+            item_dict["category"] = models.CategoryType(item_dict["category"])
+
+        # 2. Auto-route location based on category
+        cat_val = (
+            item_dict["category"].value
+            if hasattr(item_dict["category"], "value")
+            else item_dict["category"]
+        )
         if cat_val == "Pantry":
-            item_dict['location'] = models.LocationType.PANTRY
-        # If it's a Freezer category, automatically force the location to freezer
+            item_dict["location"] = models.LocationType.PANTRY
         elif cat_val == "Freezer":
-            item_dict['location'] = models.LocationType.FREEZER
-        # --------------------------------
+            item_dict["location"] = models.LocationType.FREEZER
 
-        # 2. Auto-Compute Expiration Date if missing
-        if 'expiration_date' not in item_dict or item_dict['expiration_date'] is None:
-            purchase_date = item_dict.get('purchase_date') or datetime.now()
-            
-            # ensure location is the enum for the helper function
-            loc = item_dict.get('location', models.LocationType.FRIDGE)
+        # 3. Auto-compute expiration date if missing
+        if not item_dict.get("expiration_date"):
+            purchase_date = item_dict.get("purchase_date") or datetime.now()
+            loc = item_dict.get("location", models.LocationType.FRIDGE)
             if isinstance(loc, str):
                 loc = models.LocationType(loc.lower())
-                
-            item_dict['expiration_date'] = get_expiration_date(
-                item_name=item_dict['name'], 
-                purchase_date=purchase_date, 
-                location=loc
+            item_dict["expiration_date"] = get_expiration_date(
+                item_name=item_dict["name"],
+                purchase_date=purchase_date,
+                location=loc,
             )
 
-        # Handle location string to enum fallback before saving
-        if isinstance(item_dict.get('location'), str):
-            item_dict['location'] = models.LocationType(item_dict['location'].lower())
-        
-        db_item = models.Item(**item_dict, user_id=DEFAULT_USER_ID)
+        # 4. Coerce location string → enum
+        if isinstance(item_dict.get("location"), str):
+            item_dict["location"] = models.LocationType(item_dict["location"].lower())
+
+        db_item = models.Item(**item_dict, user_id=current_user.id)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
         return db_item
+
     except Exception as e:
         db.rollback()
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail=f"Error creating item: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error creating item: {e}")
+
+
+# ── Update ─────────────────────────────────────────────────────────────────────
 
 @router.put("/{item_id}", response_model=schemas.ItemResponse)
-def update_item(item_id: int, item_update: schemas.ItemUpdate, db: Session = Depends(get_db)):
-    """Update an item"""
-    db_item = db.query(models.Item).filter(
-        models.Item.id == item_id,
-        models.Item.user_id == DEFAULT_USER_ID
-    ).first()
-    if not db_item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
+def update_item(
+    item_id: int,
+    item_update: schemas.ItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_item = _owned_item(item_id, current_user.id, db)
     try:
         update_data = item_update.dict(exclude_unset=True)
-        
-        # Handle category and location enum conversion
-        if 'category' in update_data and isinstance(update_data['category'], str):
-            update_data['category'] = models.CategoryType(update_data['category'])
-        if 'location' in update_data and isinstance(update_data['location'], str):
-            update_data['location'] = models.LocationType(update_data['location'].lower())
-        
+
+        if "category" in update_data and isinstance(update_data["category"], str):
+            update_data["category"] = models.CategoryType(update_data["category"])
+        if "location" in update_data and isinstance(update_data["location"], str):
+            update_data["location"] = models.LocationType(update_data["location"].lower())
+
         for field, value in update_data.items():
             setattr(db_item, field, value)
-        
+
         db.commit()
         db.refresh(db_item)
         return db_item
+
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error updating item: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error updating item: {e}")
+
+
+# ── Delete ─────────────────────────────────────────────────────────────────────
 
 @router.delete("/{item_id}")
-def delete_item(item_id: int, db: Session = Depends(get_db)):
-    """Delete an item (moves to deleted_items for undo)"""
-    db_item = db.query(models.Item).filter(
-        models.Item.id == item_id,
-        models.Item.user_id == DEFAULT_USER_ID
-    ).first()
-    
-    if not db_item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_item = _owned_item(item_id, current_user.id, db)
     try:
-        # Safely extract enums/strings
-        cat_val = db_item.category.value if hasattr(db_item.category, 'value') else str(db_item.category)
-        loc_val = db_item.location.value if hasattr(db_item.location, 'value') else str(db_item.location)
-        
-        # Safely extract dates (handles both datetime objects and raw strings)
-        exp_val = db_item.expiration_date.isoformat() if hasattr(db_item.expiration_date, 'isoformat') else str(db_item.expiration_date)
-        
-        purch_val = None
-        if db_item.purchase_date:
-            purch_val = db_item.purchase_date.isoformat() if hasattr(db_item.purchase_date, 'isoformat') else str(db_item.purchase_date)
+        cat_val = db_item.category.value if hasattr(db_item.category, "value") else str(db_item.category)
+        loc_val = db_item.location.value if hasattr(db_item.location, "value") else str(db_item.location)
+        exp_val = db_item.expiration_date.isoformat() if hasattr(db_item.expiration_date, "isoformat") else str(db_item.expiration_date)
+        purch_val = (
+            db_item.purchase_date.isoformat()
+            if db_item.purchase_date and hasattr(db_item.purchase_date, "isoformat")
+            else str(db_item.purchase_date) if db_item.purchase_date else None
+        )
 
-        # Save backup to deleted_items
-        import json
         deleted_item = models.DeletedItem(
             item_id=db_item.id,
             name=db_item.name,
-            user_id=db_item.user_id,
+            user_id=current_user.id,
             original_data=json.dumps({
                 "name": db_item.name,
                 "expiration_date": exp_val,
@@ -166,47 +210,40 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
                 "category": cat_val,
                 "location": loc_val,
                 "purchase_date": purch_val,
-            })
+            }),
         )
         db.add(deleted_item)
-        
         db.delete(db_item)
         db.commit()
         return {"message": "Item deleted"}
-        
+
     except Exception as e:
         db.rollback()
-        # This will print the EXACT error to your Render logs
-        print(f"CRITICAL DELETE ERROR: {str(e)}") 
-        raise HTTPException(status_code=500, detail=f"Failed to delete item: {str(e)}")
+        print(f"DELETE ERROR for item {item_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete item: {e}")
 
-@router.get("/deleted/recent", response_model=List[dict])
-def get_recently_deleted(db: Session = Depends(get_db)):
-    """Get recently deleted items for undo"""
-    deleted = db.query(models.DeletedItem).filter(
-        models.DeletedItem.user_id == DEFAULT_USER_ID
-    ).order_by(models.DeletedItem.deleted_at.desc()).limit(10).all()
-    
-    return [{"id": d.id, "name": d.name, "deleted_at": d.deleted_at, "original_data": d.original_data} for d in deleted]
+
+# ── Restore ────────────────────────────────────────────────────────────────────
 
 @router.post("/deleted/{deleted_id}/restore", response_model=schemas.ItemResponse)
-def restore_item(deleted_id: int, db: Session = Depends(get_db)):
-    """Restore a deleted item"""
+def restore_item(
+    deleted_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     deleted = db.query(models.DeletedItem).filter(
         models.DeletedItem.id == deleted_id,
-        models.DeletedItem.user_id == DEFAULT_USER_ID
+        models.DeletedItem.user_id == current_user.id,
     ).first()
     if not deleted:
-        raise HTTPException(status_code=404, detail="Deleted item not found")
-    
-    import json
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deleted item not found")
+
     original_data = json.loads(deleted.original_data)
     original_data["expiration_date"] = datetime.fromisoformat(original_data["expiration_date"])
-    if original_data["purchase_date"]:
+    if original_data.get("purchase_date"):
         original_data["purchase_date"] = datetime.fromisoformat(original_data["purchase_date"])
-    
-    # Create new item from original data
-    new_item = models.Item(**original_data, user_id=DEFAULT_USER_ID)
+
+    new_item = models.Item(**original_data, user_id=current_user.id)
     db.add(new_item)
     db.delete(deleted)
     db.commit()
