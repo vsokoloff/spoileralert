@@ -9,15 +9,15 @@ Setup:
 3. Add to your .env:
        GEMINI_API_KEY=your_key_here
 4. Add to requirements.txt:
-       google-generativeai
+       google-genai
 """
 
 import os
 from datetime import datetime, timedelta
 from typing import List
 
-import google.generativeai as genai
-from fastapi import APIRouter, Depends, HTTPException
+from google import genai
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -26,18 +26,16 @@ from app.database import get_db
 
 router = APIRouter()
 
+GEMINI_MODEL = "gemini-1.5-flash"
+
 
 # ── Gemini setup ───────────────────────────────────────────────────────────────
 
-def _get_gemini_model():
+def _get_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",   # free tier model
-        generation_config={"max_output_tokens": 400, "temperature": 0.7},
-    )
+    return genai.Client(api_key=api_key)
 
 
 # ── Fridge helpers ─────────────────────────────────────────────────────────────
@@ -78,7 +76,7 @@ def _expiring_soon(user_id: int, db: Session, days: int = 3) -> List[dict]:
     ]
 
 
-def _system_prompt(items_list: str, expiring_list: str) -> str:
+def _build_prompt(items_list: str, expiring_list: str, user_message: str) -> str:
     return f"""You are SPOY, a helpful AI kitchen assistant for the Spoiler Alert app.
 Your job is to suggest recipes based on what the user has in their fridge, especially items expiring soon.
 
@@ -90,12 +88,22 @@ Rules:
 2. Prioritise items expiring soon.
 3. If there are not enough ingredients for a full meal, say so and suggest the best option available.
 4. Politely decline any question not related to food, cooking, or fridge inventory.
-5. Keep responses concise and friendly."""
+5. Keep responses concise and friendly.
+
+User: {user_message}"""
 
 
 def _save_conversation(user_id: int, message: str, response: str, db: Session):
     db.add(models.SPOYConversation(user_id=user_id, message=message, response=response))
     db.commit()
+
+
+def _call_gemini(client, prompt: str) -> str:
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+    )
+    return response.text
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -119,8 +127,8 @@ def get_auto_recommendations(
     items_list = ", ".join(i["name"] for i in fridge)
     expiring_list = ", ".join(expiring_names)
 
-    model = _get_gemini_model()
-    if not model:
+    client = _get_client()
+    if not client:
         return schemas.SPOYResponse(
             response=(
                 f"You have {len(expiring)} item(s) expiring soon: {expiring_list}.\n\n"
@@ -130,13 +138,12 @@ def get_auto_recommendations(
         )
 
     try:
-        prompt = (
-            _system_prompt(items_list, expiring_list)
-            + f"\n\nThe user has {len(expiring)} item(s) expiring soon: {expiring_list}. "
-            "Please suggest recipes to use them up."
+        prompt = _build_prompt(
+            items_list,
+            expiring_list,
+            f"I have {len(expiring)} item(s) expiring soon: {expiring_list}. Please suggest recipes to use them up."
         )
-        result = model.generate_content(prompt)
-        ai_response = result.text
+        ai_response = _call_gemini(client, prompt)
         _save_conversation(current_user.id, "Auto-recommendation", ai_response, db)
         return schemas.SPOYResponse(response=ai_response, suggested_items=expiring_names[:3])
 
@@ -159,17 +166,16 @@ def chat_with_spoy(
     items_list = ", ".join(i["name"] for i in fridge)
     expiring_list = ", ".join(i["name"] for i in expiring)
 
-    model = _get_gemini_model()
-    if not model:
+    client = _get_client()
+    if not client:
         return schemas.SPOYResponse(
             response="GEMINI_API_KEY is not configured. Add it to your .env to enable SPOY.",
             suggested_items=[i["name"] for i in expiring[:3]],
         )
 
     try:
-        prompt = _system_prompt(items_list, expiring_list) + f"\n\nUser: {message.message}"
-        result = model.generate_content(prompt)
-        ai_response = result.text
+        prompt = _build_prompt(items_list, expiring_list, message.message)
+        ai_response = _call_gemini(client, prompt)
         _save_conversation(current_user.id, message.message, ai_response, db)
         return schemas.SPOYResponse(
             response=ai_response,
