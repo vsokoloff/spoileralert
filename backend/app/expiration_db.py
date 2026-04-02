@@ -5,7 +5,6 @@ Expiration date database based on the Food Storage and Color Coding reference sh
 import os
 import re
 import json
-from openai import OpenAI
 from functools import lru_cache
 from datetime import datetime, timedelta
 from typing import Optional, Dict
