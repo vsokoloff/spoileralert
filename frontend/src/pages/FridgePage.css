@@ -80,3 +80,15 @@
   font-size: 14px !important;
   font-weight: 600;
 }
+
+.fridge-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fridge-user {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}

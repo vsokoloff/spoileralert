@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-// NEW: Imported Sun and Moon icons from lucide-react
-import { HelpCircle, Bell, Sun, Moon } from 'lucide-react'
+import { HelpCircle, Bell, Sun, Moon, LogOut } from 'lucide-react'
 import { getItems } from '../api/items'
-import { getCategories, getItemsByCategory } from '../api/categories'
+import { getCategories } from '../api/categories'
 import { getCategoryColor, getStatusColor } from '../utils/colors'
+import { logout, getUser } from '../api/auth'
 import LocationGrid from '../components/LocationGrid'
 import CategoryGrid from '../components/CategoryGrid'
 import InventoryPreview from '../components/InventoryPreview'
@@ -13,13 +13,13 @@ import HelpModal from '../components/HelpModal'
 import './FridgePage.css'
 
 const CATEGORIES = [
-  { name: 'Produce',     color: '#10b981' },
-  { name: 'Meat',        color: '#ef4444' },
-  { name: 'Eggs & Dairy',color: '#f59e0b' },
-  { name: 'Pantry',      color: '#facc15' },
-  { name: 'Deli',        color: '#8b5cf6' },
-  { name: 'Freezer',     color: '#3b82f6' },
-  { name: 'Leftovers',   color: '#ec4899' },
+  { name: 'Produce',      color: '#10b981' },
+  { name: 'Meat',         color: '#ef4444' },
+  { name: 'Eggs & Dairy', color: '#f59e0b' },
+  { name: 'Pantry',       color: '#facc15' },
+  { name: 'Deli',         color: '#8b5cf6' },
+  { name: 'Freezer',      color: '#3b82f6' },
+  { name: 'Leftovers',    color: '#ec4899' },
 ]
 
 function FridgePage() {
@@ -27,13 +27,13 @@ function FridgePage() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
-  // NEW: State to track current theme
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
   const navigate = useNavigate()
 
+  const user = getUser()
+
   useEffect(() => {
     loadData()
-    // Show tutorial on first visit
     const seen = localStorage.getItem('helpSeen')
     if (!seen) {
       setHelpOpen(true)
@@ -45,7 +45,7 @@ function FridgePage() {
     try {
       const [itemsData, categoriesData] = await Promise.all([
         getItems().catch(err => { console.error('Error fetching items:', err); return [] }),
-        getCategories().catch(err => { console.error('Error fetching categories:', err); return [] })
+        getCategories().catch(err => { console.error('Error fetching categories:', err); return [] }),
       ])
       setItems(itemsData || [])
       setCategories(categoriesData || [])
@@ -58,12 +58,17 @@ function FridgePage() {
     }
   }
 
-  // NEW: Function to handle switching between light and dark mode
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
+  }
+
+  const handleLogout = () => {
+    if (window.confirm('Sign out of Spoiler Alert?')) {
+      logout()
+    }
   }
 
   const handleLocationClick = (location) => navigate(`/category/all?location=${location}`)
@@ -77,9 +82,9 @@ function FridgePage() {
       else if (item.location === 'pantry') counts.pantry++
     })
     return [
-      { name: 'fridge', count: counts.fridge },
+      { name: 'fridge',  count: counts.fridge },
       { name: 'freezer', count: counts.freezer },
-      { name: 'pantry', count: counts.pantry },
+      { name: 'pantry',  count: counts.pantry },
     ]
   }
 
@@ -90,9 +95,11 @@ function FridgePage() {
   return (
     <div className="fridge-page">
       <header className="fridge-header">
-        <h1>My Fridge</h1>
+        <div className="fridge-header-left">
+          <h1>My Fridge</h1>
+          {user && <p className="fridge-user">👋 {user.name}</p>}
+        </div>
         <div className="fridge-header-actions">
-          {/* NEW: Toggle Theme Button */}
           <button
             className="header-icon-btn"
             onClick={toggleTheme}
@@ -113,6 +120,13 @@ function FridgePage() {
             title="Help & Tutorial"
           >
             <HelpCircle size={20} />
+          </button>
+          <button
+            className="header-icon-btn"
+            onClick={handleLogout}
+            title="Sign out"
+          >
+            <LogOut size={20} />
           </button>
         </div>
       </header>
