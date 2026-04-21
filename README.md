@@ -104,6 +104,11 @@ Spoiler Alert /
 
    Backend will run on `http://localhost:8000`
 
+
+Click the button below to deploy your own instance of this backend and database for free:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
 ### Frontend Setup
 
 1. **Navigate to frontend directory:**

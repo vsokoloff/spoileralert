@@ -9,12 +9,14 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: spoileralert-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: ENVIRONMENT
         value: production
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
 
 databases:
