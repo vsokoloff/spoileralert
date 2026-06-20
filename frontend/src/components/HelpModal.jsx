@@ -30,7 +30,7 @@ const STEPS = [
     subtitle: 'Know what needs attention at a glance',
     body: (
       <div className="help-color-list">
-        <div className="help-color-row"><span className="dot green" /> <span><strong>Green</strong> — 7+ days, you\'re good</span></div>
+        <div className="help-color-row"><span className="dot green" /> <span><strong>Green</strong> — 7+ days, you&apos;re good</span></div>
         <div className="help-color-row"><span className="dot yellow" /> <span><strong>Yellow</strong> — 3–6 days, use it soon</span></div>
         <div className="help-color-row"><span className="dot red" /> <span><strong>Red</strong> — under 3 days or expired</span></div>
       </div>

@@ -168,61 +168,70 @@ CATEGORY_DEFAULT_DAYS: Dict[CategoryType, int] = {
 }
 
 
-# --- NEW: AI RAG-LITE APPROXIMATION ---
+# --- AI RAG-LITE APPROXIMATION (Google Gemini) ---
+# Uses the same GEMINI_API_KEY as the rest of the app (receipt scanning + SPOY),
+# so only one free API key is ever required.
+_GEMINI_MODEL = "gemini-1.5-flash"
+
+_LLM_PROMPT = """You are an AI data categorizer for a food inventory app.
+The user will provide a food item name. You must approximate what it is, categorize it, and provide the fridge shelf life based STRICTLY on these database rules:
+
+DATABASE RULES:
+- Leftovers / Cooked Meals / Sandwiches / Prepared Food: 3-4 days (Category: Leftovers)
+- Ground Meats / Minced Meat (Beef, Turkey, Pork): 2 days (Category: Meat)
+- Fresh Poultry / Fish / Seafood: 2 days (Category: Meat)
+- Steaks / Chops / Roasts: 4 days (Category: Meat)
+- Deli Meats / Sliced Meats: 5 days (Category: Deli)
+- Leafy Greens / Herbs: 5 days (Category: Produce)
+- Soft Berries: 3 days (Category: Produce)
+- Hard Fruits (Apples, Pears) / Root Veggies: 21 days (Category: Produce)
+- Citrus Fruits: 14 days (Category: Produce)
+- Liquid Dairy (Milk, Cream) / Plant Milks: 7 days (Category: Eggs & Dairy)
+- Soft Cheese / Yogurt: 10-14 days (Category: Eggs & Dairy)
+- Hard Cheese (Parmesan, Cheddar): 60 days (Category: Eggs & Dairy)
+- Eggs: 28 days (Category: Eggs & Dairy)
+- Condiments / Dry Goods / Pantry staples: 365 days (Category: Pantry)
+- Frozen Foods: 90 days (Category: Freezer)
+
+Respond ONLY in valid JSON (no markdown) matching this schema:
+{{"category": "Produce" | "Eggs & Dairy" | "Meat" | "Deli" | "Pantry" | "Freezer" | "Leftovers", "shelf_life_days": <integer>}}
+
+Item: {item_name}"""
+
+
 @lru_cache(maxsize=100)
 def analyze_unknown_item_with_llm(item_name: str) -> dict:
     """
-    If an item isn't in our hardcoded lists, ask OpenAI to approximate it 
-    based strictly on our database's exact shelf-life rules.
+    If an item isn't in our hardcoded lists, ask Google Gemini to approximate it
+    based strictly on our database's exact shelf-life rules. Degrades gracefully
+    (returns Nones) when no key is set or the call fails.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return {"category": None, "shelf_life_days": None}
 
     try:
-        client = OpenAI(api_key=api_key, timeout=10.0, max_retries=1)
+        from google import genai  # imported lazily so the app runs without the package
 
-        # We inject our specific database rules as the "context" for the LLM
-        system_prompt = """You are an AI data categorizer for a food inventory app.
-        The user will provide a food item name. You must approximate what it is, categorize it, and provide the fridge shelf life based STRICTLY on these database rules:
-
-        DATABASE RULES:
-        - Leftovers / Cooked Meals / Sandwiches / Prepared Food: 3-4 days (Category: Leftovers)
-        - Ground Meats / Minced Meat (Beef, Turkey, Pork): 2 days (Category: Meat)
-        - Fresh Poultry / Fish / Seafood: 2 days (Category: Meat)
-        - Steaks / Chops / Roasts: 4 days (Category: Meat)
-        - Deli Meats / Sliced Meats: 5 days (Category: Deli)
-        - Leafy Greens / Herbs: 5 days (Category: Produce)
-        - Soft Berries: 3 days (Category: Produce)
-        - Hard Fruits (Apples, Pears) / Root Veggies: 21 days (Category: Produce)
-        - Citrus Fruits: 14 days (Category: Produce)
-        - Liquid Dairy (Milk, Cream) / Plant Milks: 7 days (Category: Eggs & Dairy)
-        - Soft Cheese / Yogurt: 10-14 days (Category: Eggs & Dairy)
-        - Hard Cheese (Parmesan, Cheddar): 60 days (Category: Eggs & Dairy)
-        - Eggs: 28 days (Category: Eggs & Dairy)
-        - Condiments / Dry Goods / Pantry staples: 365 days (Category: Pantry)
-        - Frozen Foods: 90 days (Category: Freezer)
-
-        Respond ONLY in valid JSON format matching this schema:
-        {
-          "category": "Produce" | "Eggs & Dairy" | "Meat" | "Deli" | "Pantry" | "Freezer" | "Leftovers",
-          "shelf_life_days": <integer>
-        }"""
-
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Item: {item_name}"}
-            ],
-            temperature=0.1,
-            response_format={"type": "json_object"}
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model=_GEMINI_MODEL,
+            contents=_LLM_PROMPT.format(item_name=item_name),
         )
 
-        result = json.loads(response.choices[0].message.content)
+        content = (response.text or "").strip()
+        # Strip markdown fences if the model wrapped the JSON
+        if content.startswith("```"):
+            parts = content.split("```")
+            content = parts[1] if len(parts) > 1 else content
+            if content.startswith("json"):
+                content = content[4:]
+        content = content.strip()
+
+        result = json.loads(content)
         return {
             "category": result.get("category"),
-            "shelf_life_days": result.get("shelf_life_days")
+            "shelf_life_days": result.get("shelf_life_days"),
         }
     except Exception as e:
         print(f"LLM Classification Error for '{item_name}': {e}")

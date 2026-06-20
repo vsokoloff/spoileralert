@@ -21,6 +21,11 @@ _frontend_url = os.getenv("FRONTEND_URL", "").strip()
 allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    # Capacitor mobile webview origins (iOS / Android) — for the mobile build.
+    "capacitor://localhost",
+    "ionic://localhost",
+    "http://localhost",
+    "https://localhost",
 ]
 if _frontend_url:
     allowed_origins.append(_frontend_url)

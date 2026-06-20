@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://spoileralert.onrender.com'
+// In production set VITE_API_URL to your own backend URL (e.g. your Render backend).
+// In local dev, leaving it unset uses Vite's proxy (vite.config.js) to localhost:8000.
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 const client = axios.create({
   baseURL: API_BASE_URL,

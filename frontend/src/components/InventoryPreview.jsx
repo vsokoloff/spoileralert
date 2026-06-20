@@ -1,10 +1,8 @@
-import { useNavigate } from 'react-router-dom'
 import { getStatusColor } from '../utils/colors'
 import { differenceInDays } from 'date-fns'
 import './InventoryPreview.css'
 
 function InventoryPreview({ items, totalCount, onViewAll }) {
-  const navigate = useNavigate()
   const moreCount = totalCount - items.length
 
   // Sort items by expiration urgency

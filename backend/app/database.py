@@ -10,6 +10,11 @@ load_dotenv()
 # Default to SQLite for easy MVP setup (no installation needed!)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./spoiler_alert.db")
 
+# Some hosts (e.g. Render, Heroku) hand out URLs starting with "postgres://",
+# which SQLAlchemy 2.x no longer recognizes. Normalize to "postgresql://".
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # SQLite needs check_same_thread=False
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):

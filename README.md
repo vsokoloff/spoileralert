@@ -18,8 +18,8 @@ A food tracking app that helps users manage their fridge inventory, track expira
 - **Frontend**: React + Vite
 - **Backend**: Python FastAPI
 - **Database**: PostgreSQL
-- **APIs**: Google Vision API (receipt scanning), OpenAI API (SPOY chatbot)
-- **Deployment**: Vercel (frontend), Backend TBD
+- **APIs**: Google Gemini (receipt scanning + SPOY chatbot) — one free key
+- **Deployment**: Render (frontend + backend + Postgres). See [PUBLISHING.md](PUBLISHING.md).
 
 ## Project Structure
 

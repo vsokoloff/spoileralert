@@ -1,7 +1,9 @@
 services:
+  # ── Backend API (FastAPI) ──────────────────────────────────────────────────
   - type: web
     name: spoileralert-backend
     runtime: python
+    rootDir: backend
     plan: free
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -16,8 +18,31 @@ services:
         generateValue: true
       - key: ENVIRONMENT
         value: production
+      # Set after first deploy to the frontend's URL (for CORS). e.g.
+      # https://spoileralert-frontend.onrender.com
+      - key: FRONTEND_URL
+        sync: false
+      # Your own free Gemini key: https://aistudio.google.com/app/apikey
       - key: GEMINI_API_KEY
         sync: false
+
+  # ── Frontend (static React build) ──────────────────────────────────────────
+  - type: web
+    name: spoileralert-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Set after first deploy to the backend's URL. e.g.
+      # https://spoileralert-backend.onrender.com
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # SPA fallback so client-side routes (e.g. /spoy) don't 404 on refresh.
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
 databases:
   - name: spoileralert-db

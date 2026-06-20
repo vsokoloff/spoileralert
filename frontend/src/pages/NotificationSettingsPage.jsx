@@ -216,7 +216,7 @@ function NotificationSettingsPage() {
                 <span className="preview-time">now</span>
               </div>
               <p className="preview-title">Your eggs expire tomorrow!</p>
-              <p className="preview-body">You can make an omelette with items in your inventory. Tap to see SPOY's suggestions.</p>
+              <p className="preview-body">You can make an omelette with items in your inventory. Tap to see SPOY&apos;s suggestions.</p>
             </div>
             <div className="notif-preview" style={{ marginTop: 10 }}>
               <div className="preview-header">
