@@ -5,7 +5,7 @@
 }
 
 .fridge-header {
-  padding: 16px 20px;
+  padding: calc(16px + env(safe-area-inset-top)) 20px 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -99,7 +99,7 @@
 
 @media (max-width: 480px) {
   .fridge-content { padding: 12px; }
-  .fridge-header { padding: 14px 16px; }
+  .fridge-header { padding: calc(14px + env(safe-area-inset-top)) 16px 14px 16px; }
   .fridge-header h1 { font-size: 22px; }
 }
 

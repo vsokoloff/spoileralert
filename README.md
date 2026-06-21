@@ -1,6 +1,12 @@
-# Spoiler Alert - MVP
+# Spoiler Alert
 
 A food tracking app that helps users manage their fridge inventory, track expiration dates, and get AI-powered recipe suggestions to reduce food waste.
+
+## About this project
+
+Spoiler Alert started as a class project for a **User-Centered Design** course. The concept, user research, and the initial prototypes (wireframes and mockups) were designed by the team as part of that coursework, with a focus on understanding how people actually manage food at home and waste less of it.
+
+The working application was then **vibe-coded with Claude Code** — using AI pair-programming to turn those design prototypes into a functioning full-stack app (React frontend, FastAPI backend, PostgreSQL database) and to ship it as a web app, with an iOS build via Capacitor.
 
 ## Features
 
