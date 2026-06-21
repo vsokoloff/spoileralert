@@ -10,10 +10,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      # External Postgres (Neon). Paste your Neon connection string in the
+      # Render dashboard. Must start with postgresql:// — the app also
+      # auto-normalizes postgres:// just in case.
       - key: DATABASE_URL
-        fromDatabase:
-          name: spoileralert-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: ENVIRONMENT
@@ -44,8 +45,5 @@ services:
         source: /*
         destination: /index.html
 
-databases:
-  - name: spoileralert-db
-    plan: free
-    databaseName: spoileralert
-    user: spoileralert
+# No managed database here — using an external free Postgres (Neon).
+# Set DATABASE_URL on the backend service to your Neon connection string.
