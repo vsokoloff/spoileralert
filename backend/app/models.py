@@ -37,6 +37,9 @@ class User(Base):
     # ── NEW: stores bcrypt hash, never the raw password ──────────────────────
     hashed_password = Column(String, nullable=False)
     # ─────────────────────────────────────────────────────────────────────────
+    # Per-user category color overrides, stored as a JSON string
+    # e.g. {"Produce": "#10b981", "Meat": "#ef4444"}
+    category_colors = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=USE_ENUM), server_default=func.now())
 
     items = relationship("Item", back_populates="owner")

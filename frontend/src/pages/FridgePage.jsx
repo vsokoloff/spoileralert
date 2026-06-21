@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HelpCircle, Bell, Sun, Moon, LogOut } from 'lucide-react'
+import { HelpCircle, Bell, Sun, Moon, LogOut, Palette } from 'lucide-react'
 import { getItems } from '../api/items'
 import { getCategories } from '../api/categories'
 import { logout, getUser } from '../api/auth'
+import { CATEGORY_NAMES, getCategoryColor } from '../utils/colors'
 import LocationGrid from '../components/LocationGrid'
 import CategoryGrid from '../components/CategoryGrid'
 import InventoryPreview from '../components/InventoryPreview'
@@ -11,16 +12,6 @@ import InventoryList from '../components/InventoryList'
 import EmptyState from '../components/EmptyState'
 import HelpModal from '../components/HelpModal'
 import './FridgePage.css'
-
-const CATEGORIES = [
-  { name: 'Produce',      color: '#10b981' },
-  { name: 'Meat',         color: '#ef4444' },
-  { name: 'Eggs & Dairy', color: '#f59e0b' },
-  { name: 'Pantry',       color: '#facc15' },
-  { name: 'Deli',         color: '#8b5cf6' },
-  { name: 'Freezer',      color: '#3b82f6' },
-  { name: 'Leftovers',    color: '#ec4899' },
-]
 
 function FridgePage() {
   const [items, setItems] = useState([])
@@ -124,6 +115,13 @@ function FridgePage() {
           </button>
           <button
             className="header-icon-btn"
+            onClick={() => navigate('/settings/colors')}
+            title="Category colors"
+          >
+            <Palette size={20} />
+          </button>
+          <button
+            className="header-icon-btn"
             onClick={() => navigate('/notifications/settings')}
             title="Notification settings"
           >
@@ -179,7 +177,7 @@ function FridgePage() {
             <div className="category-section">
               <div className="category-section-title">Filter Inventory by Category</div>
               <CategoryGrid
-                categories={CATEGORIES}
+                categories={CATEGORY_NAMES.map((name) => ({ name, color: getCategoryColor(name) }))}
                 categoryCounts={categories}
                 onCategoryClick={handleCategoryClick}
               />

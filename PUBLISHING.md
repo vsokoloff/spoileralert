@@ -85,24 +85,53 @@ don't need to set `VITE_API_URL` locally. Local data uses a SQLite file
 
 ---
 
-## Step 4 — Mobile app (when you're ready)
+## Step 4 — iOS app (Capacitor + Xcode)
 
-The project already has Capacitor with `ios/` and `android/` folders. The mobile
-app bundles the web build and talks to your live backend, so:
+The project already has Capacitor configured (`ios/` folder, bundle id
+`com.spoileralert.app`). The iOS app bundles your web build and talks to your
+live Render backend over HTTPS. The backend already allows Capacitor's mobile
+origins for CORS, so API calls work from inside the app.
+
+**You need:** a Mac with **Xcode** installed, and **CocoaPods**
+(`sudo gem install cocoapods`, or `brew install cocoapods`).
+
+### One-time / each time you change the web app
+
+Run these from the `frontend` folder on your Mac:
 
 ```bash
 cd frontend
-# Build with your backend URL baked in:
+npm install
+
+# 1. Build the web app with your backend URL baked in (required — mobile can't
+#    use relative URLs, so this must be your real backend):
 VITE_API_URL="https://spoileralert-backend.onrender.com" npm run build
-npx cap sync                       # copies dist/ into ios & android
-npx cap open ios                   # opens Xcode  (needs a Mac + Xcode)
-npx cap open android               # opens Android Studio
+
+# 2. Copy the build into the native iOS project (runs pod install too):
+npx cap sync ios
+
+# 3. Open the project in Xcode:
+npx cap open ios
 ```
 
-The backend already allows the Capacitor mobile origins for CORS, so API calls
-work from the app. From Xcode / Android Studio you can run it on a simulator or
-submit to the App Store / Play Store. (A home-screen **widget** is a native
-add-on built in Xcode/Android Studio on top of this — a separate later step.)
+### In Xcode
+
+1. In the left sidebar, select the **App** target → **Signing & Capabilities**.
+2. Under **Team**, pick your Apple ID (add it via Xcode → Settings → Accounts if
+   needed). A free Apple ID is enough to run on a simulator or your own iPhone.
+3. Pick a device at the top — a **simulator** (e.g. iPhone 15) or your plugged-in
+   iPhone — and press the **▶ Run** button.
+4. The app launches, and you can register / log in just like the website.
+
+> To put it on the App Store later you'll need a paid Apple Developer account
+> ($99/yr) and to Archive the build in Xcode — a separate step when you're ready.
+
+Android works the same way later: `npx cap sync android` then `npx cap open
+android` (needs Android Studio). A home-screen **widget** is a native add-on
+built on top of this in Xcode — another later step.
+
+> Note: the `ios/App/App/public` folder (the copied web build) is gitignored, so
+> always run steps 1–2 after pulling new code before building in Xcode.
 
 ---
 

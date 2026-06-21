@@ -2,9 +2,10 @@
 backend/app/schemas.py
 """
 
+import json
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from app.models import CategoryType, LocationType
 
 CATEGORY_ALIASES = {}
@@ -79,9 +80,25 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     created_at: datetime
+    category_colors: Optional[Dict[str, str]] = None
+
+    @field_validator("category_colors", mode="before")
+    @classmethod
+    def _parse_category_colors(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                return None
+        return v
 
     class Config:
         from_attributes = True
+
+
+class CategoryColorsUpdate(BaseModel):
+    """Map of category name -> hex color, e.g. {"Produce": "#10b981"}."""
+    colors: Dict[str, str]
 
 
 # ── Auth schemas ───────────────────────────────────────────────────────────────

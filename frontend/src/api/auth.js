@@ -1,7 +1,14 @@
 import client from './client'
+import { setLocalCategoryColors } from '../utils/colors'
 
 export const register = async (name, email, password) => {
   const response = await client.post('/api/users/register', { name, email, password })
+  return response.data
+}
+
+export const updateCategoryColors = async (colors) => {
+  const response = await client.put('/api/users/me/category-colors', { colors })
+  if (response.data?.category_colors) setLocalCategoryColors(response.data.category_colors)
   return response.data
 }
 
@@ -18,6 +25,9 @@ export const getMe = async () => {
 export const saveAuth = (tokenResponse) => {
   localStorage.setItem('token', tokenResponse.access_token)
   localStorage.setItem('user', JSON.stringify(tokenResponse.user))
+  if (tokenResponse.user?.category_colors) {
+    setLocalCategoryColors(tokenResponse.user.category_colors)
+  }
 }
 
 export const logout = () => {

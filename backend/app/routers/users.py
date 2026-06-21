@@ -78,3 +78,19 @@ def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
 def get_me(current_user: models.User = Depends(get_current_user)):
     """Return the authenticated user's profile."""
     return current_user
+
+
+# ── Category color preferences ───────────────────────────────────────────────────
+
+@router.put("/me/category-colors", response_model=schemas.UserResponse)
+def update_category_colors(
+    payload: schemas.CategoryColorsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Save the user's per-category color overrides (synced across devices)."""
+    import json
+    current_user.category_colors = json.dumps(payload.colors)
+    db.commit()
+    db.refresh(current_user)
+    return current_user

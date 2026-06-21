@@ -6,10 +6,32 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from sqlalchemy import inspect, text
+
 from app.database import engine, Base
 from app.routers import items, categories, receipt, spoy, users, notifications, roommates
 
 Base.metadata.create_all(bind=engine)
+
+
+def _ensure_schema():
+    """Lightweight, idempotent migration for columns added after the first deploy.
+
+    create_all() only creates missing tables — it never alters existing ones.
+    This adds new columns to already-existing tables (works on SQLite + Postgres).
+    """
+    try:
+        inspector = inspect(engine)
+        if "users" in inspector.get_table_names():
+            user_cols = [c["name"] for c in inspector.get_columns("users")]
+            if "category_colors" not in user_cols:
+                with engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN category_colors TEXT"))
+    except Exception as e:  # never block startup on a migration hiccup
+        print(f"[schema] ensure_schema skipped: {e}")
+
+
+_ensure_schema()
 
 app = FastAPI(title="Spoiler Alert API", version="1.0.0")
 

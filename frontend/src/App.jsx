@@ -6,10 +6,12 @@ import AddItemPage from './pages/AddItemPage'
 import EditItemPage from './pages/EditItemPage'
 import SPOYPage from './pages/SPOYPage'
 import NotificationSettingsPage from './pages/NotificationSettingsPage'
+import CategoryColorsPage from './pages/CategoryColorsPage'
 import LoginPage from './pages/LoginPage'
 import BottomNav from './components/BottomNav'
 import TestPage from './TestPage'
-import { isLoggedIn } from './api/auth'
+import { isLoggedIn, getMe } from './api/auth'
+import { setLocalCategoryColors } from './utils/colors'
 
 // ── Protected route — redirects to /login if not authenticated ────────────────
 function ProtectedRoute({ children }) {
@@ -23,6 +25,15 @@ function App() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark'
     document.documentElement.setAttribute('data-theme', savedTheme)
+
+    // Refresh category colors from the server so they sync across devices.
+    if (isLoggedIn()) {
+      getMe()
+        .then((me) => {
+          if (me?.category_colors) setLocalCategoryColors(me.category_colors)
+        })
+        .catch(() => { /* offline or not authed — keep cached colors */ })
+    }
   }, [])
 
   return (
@@ -40,6 +51,7 @@ function App() {
           <Route path="/edit/:id" element={<ProtectedRoute><EditItemPage /></ProtectedRoute>} />
           <Route path="/spoy" element={<ProtectedRoute><SPOYPage /></ProtectedRoute>} />
           <Route path="/notifications/settings" element={<ProtectedRoute><NotificationSettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/colors" element={<ProtectedRoute><CategoryColorsPage /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

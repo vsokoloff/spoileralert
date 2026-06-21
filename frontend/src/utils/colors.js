@@ -31,15 +31,42 @@ export function getStatusText(expirationDate) {
   return `Expires in ${months} month${months !== 1 ? 's' : ''}`
 }
 
-export function getCategoryColor(category) {
-  const colors = {
-    'Produce':     '#10b981',
-    'Meat':        '#ef4444',
-    'Eggs & Dairy':'#f59e0b',
-    'Pantry':      '#facc15',
-    'Deli':        '#8b5cf6',
-    'Freezer':     '#3b82f6',
-    'Leftovers':   '#ec4899',
+// ── Category colors (customizable per user) ──────────────────────────────────
+export const DEFAULT_CATEGORY_COLORS = {
+  'Produce':      '#10b981',
+  'Meat':         '#ef4444',
+  'Eggs & Dairy': '#f59e0b',
+  'Pantry':       '#facc15',
+  'Deli':         '#8b5cf6',
+  'Freezer':      '#3b82f6',
+  'Leftovers':    '#ec4899',
+}
+
+export const CATEGORY_NAMES = Object.keys(DEFAULT_CATEGORY_COLORS)
+
+const COLORS_STORAGE_KEY = 'categoryColors'
+
+// Returns the full map: defaults merged with the user's saved overrides.
+export function getCategoryColors() {
+  let overrides = {}
+  try {
+    const raw = localStorage.getItem(COLORS_STORAGE_KEY)
+    if (raw) overrides = JSON.parse(raw) || {}
+  } catch {
+    overrides = {}
   }
-  return colors[category] || '#6b7280'
+  return { ...DEFAULT_CATEGORY_COLORS, ...overrides }
+}
+
+export function getCategoryColor(category) {
+  return getCategoryColors()[category] || '#6b7280'
+}
+
+// Cache the user's colors locally (so getCategoryColor stays synchronous).
+export function setLocalCategoryColors(map) {
+  try {
+    localStorage.setItem(COLORS_STORAGE_KEY, JSON.stringify(map || {}))
+  } catch {
+    /* ignore storage errors */
+  }
 }
