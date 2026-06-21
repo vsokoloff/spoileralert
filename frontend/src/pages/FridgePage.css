@@ -1,6 +1,6 @@
 .fridge-page {
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   background: var(--bg-primary);
 }
 

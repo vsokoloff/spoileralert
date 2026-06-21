@@ -1,6 +1,6 @@
 .category-page {
   min-height: 100vh;
-  padding-bottom: 100px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
   background: var(--bg-primary);
 }
 
@@ -361,7 +361,7 @@
 /* ── Floating Add Button ── */
 .floating-add-btn {
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + env(safe-area-inset-bottom));
   right: 20px;
   background: var(--accent);
   color: white;
