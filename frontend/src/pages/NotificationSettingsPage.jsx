@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Bell, Clock, Zap, ShoppingCart, ChefHat, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Bell, Clock, Zap, ShoppingCart, ChefHat, AlertTriangle, Ban, Users } from 'lucide-react'
 import './NotificationSettingsPage.css'
 
 const DIGEST_TIMES = ['8:00 AM', '9:00 AM', '10:00 AM', '12:00 PM', '6:00 PM', '8:00 PM']
@@ -138,7 +138,7 @@ function NotificationSettingsPage() {
 
             <div className="row-divider" />
             <SettingRow
-              icon={<span style={{ fontSize: 18 }}>🚫</span>}
+              icon={<Ban size={18} color="#ef4444" />}
               title="Already expired"
               subtitle="Remind me to throw away expired items"
             >
@@ -165,7 +165,7 @@ function NotificationSettingsPage() {
             </SettingRow>
             <div className="row-divider" />
             <SettingRow
-              icon={<span style={{ fontSize: 18 }}>👯</span>}
+              icon={<Users size={18} color="var(--accent)" />}
               title="Duplicate items"
               subtitle="Alert when you have the same item twice — use oldest first"
             >
@@ -212,7 +212,7 @@ function NotificationSettingsPage() {
           <Section title="PREVIEW">
             <div className="notif-preview">
               <div className="preview-header">
-                <span className="preview-app">⚠️ Spoiler Alert</span>
+                <span className="preview-app">Spoiler Alert</span>
                 <span className="preview-time">now</span>
               </div>
               <p className="preview-title">Your eggs expire tomorrow!</p>
@@ -220,7 +220,7 @@ function NotificationSettingsPage() {
             </div>
             <div className="notif-preview" style={{ marginTop: 10 }}>
               <div className="preview-header">
-                <span className="preview-app">⚠️ Spoiler Alert</span>
+                <span className="preview-app">Spoiler Alert</span>
                 <span className="preview-time">12:00 PM</span>
               </div>
               <p className="preview-title">Daily digest — 3 items expiring soon</p>

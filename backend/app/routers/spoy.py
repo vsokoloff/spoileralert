@@ -89,6 +89,7 @@ Rules:
 3. If there are not enough ingredients for a full meal, say so and suggest the best option available.
 4. Politely decline any question not related to food, cooking, or fridge inventory.
 5. Keep responses concise and friendly.
+6. Do not use any emojis in your response.
 
 User: {user_message}"""
 
@@ -118,7 +119,7 @@ def get_auto_recommendations(
 
     if not expiring:
         return schemas.SPOYResponse(
-            response="Great news! You don't have any items expiring in the next 3 days. Your fridge is looking good! 🎉",
+            response="Great news! You don't have any items expiring in the next 3 days. Your fridge is looking good!",
             suggested_items=[],
         )
 

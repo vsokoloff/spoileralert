@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Snowflake } from 'lucide-react'
 import { login, register, saveAuth } from '../api/auth'
 import './LoginPage.css'
 
@@ -48,7 +49,7 @@ function LoginPage() {
 
         {/* Logo / Branding */}
         <div className="login-logo">
-          <div className="login-avatar">🧊</div>
+          <div className="login-avatar"><Snowflake size={32} /></div>
           <h1>Spoiler Alert</h1>
           <p>Track your fridge. Waste less food.</p>
         </div>

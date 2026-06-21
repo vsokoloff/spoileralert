@@ -1,0 +1,200 @@
+.inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Filters (location + category chips) ─────────────────────────────────── */
+.inv-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-primary);
+  padding-bottom: 8px;
+  z-index: 2;
+}
+
+.inv-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.inv-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.inv-chip {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.inv-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Expiration groups ───────────────────────────────────────────────────── */
+.inv-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inv-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  padding-left: 4px;
+}
+
+.inv-group-title.bucket-expired { color: #ef4444; }
+.inv-group-title.bucket-soon    { color: #f97316; }
+.inv-group-title.bucket-week    { color: #eab308; }
+.inv-group-title.bucket-good    { color: #22c55e; }
+
+.inv-count {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+/* ── Item rows ───────────────────────────────────────────────────────────── */
+.inv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.status-green  { background-color: #22c55e; }
+.status-dot.status-yellow { background-color: #eab308; }
+.status-dot.status-red    { background-color: #ef4444; }
+
+.inv-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.inv-item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-item-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.inv-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.inv-cat-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.inv-qty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.inv-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.inv-action {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.inv-action:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.inv-action.delete:hover {
+  color: #ef4444;
+}
+
+/* ── Empty + add ─────────────────────────────────────────────────────────── */
+.inv-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40px 0;
+  font-size: 15px;
+}
+
+.inv-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 4px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.inv-add-btn:hover {
+  background: var(--bg-hover);
+}

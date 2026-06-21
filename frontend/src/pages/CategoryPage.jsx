@@ -335,7 +335,7 @@ function CategoryPage() {
                         {item.category}
                       </span>
                       {item.shared_with && (
-                        <span className="shared-badge">👤 {item.shared_with}</span>
+                        <span className="shared-badge">{item.shared_with}</span>
                       )}
                       {item.quantity > 1 && (
                         <span className="quantity">Qty: {item.quantity}</span>

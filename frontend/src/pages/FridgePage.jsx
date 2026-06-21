@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { HelpCircle, Bell, Sun, Moon, LogOut } from 'lucide-react'
 import { getItems } from '../api/items'
@@ -7,6 +7,7 @@ import { logout, getUser } from '../api/auth'
 import LocationGrid from '../components/LocationGrid'
 import CategoryGrid from '../components/CategoryGrid'
 import InventoryPreview from '../components/InventoryPreview'
+import InventoryList from '../components/InventoryList'
 import EmptyState from '../components/EmptyState'
 import HelpModal from '../components/HelpModal'
 import './FridgePage.css'
@@ -27,9 +28,24 @@ function FridgePage() {
   const [loading, setLoading] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
+  const [page, setPage] = useState(0)
+  const swipeRef = useRef(null)
   const navigate = useNavigate()
 
   const user = getUser()
+
+  const goToPage = (i) => {
+    const el = swipeRef.current
+    if (el) el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
+    setPage(i)
+  }
+
+  const handleSwipeScroll = () => {
+    const el = swipeRef.current
+    if (!el) return
+    const i = Math.round(el.scrollLeft / el.clientWidth)
+    if (i !== page) setPage(i)
+  }
 
   useEffect(() => {
     loadData()
@@ -96,7 +112,7 @@ function FridgePage() {
       <header className="fridge-header">
         <div className="fridge-header-left">
           <h1>My Fridge</h1>
-          {user && <p className="fridge-user">👋 {user.name}</p>}
+          {user && <p className="fridge-user">Hi, {user.name}</p>}
         </div>
         <div className="fridge-header-actions">
           <button
@@ -130,26 +146,53 @@ function FridgePage() {
         </div>
       </header>
 
-      <div className="fridge-content">
-        <InventoryPreview
-          items={items}
-          totalCount={items.length}
-          onViewAll={() => navigate('/category/all')}
-        />
+      <div className="fridge-tabs">
+        <button
+          className={`fridge-tab ${page === 0 ? 'active' : ''}`}
+          onClick={() => goToPage(0)}
+        >
+          Overview
+        </button>
+        <button
+          className={`fridge-tab ${page === 1 ? 'active' : ''}`}
+          onClick={() => goToPage(1)}
+        >
+          Inventory
+        </button>
+      </div>
 
-        <LocationGrid
-          locationCounts={getLocationCounts()}
-          onLocationClick={handleLocationClick}
-        />
+      <div className="swipe-container" ref={swipeRef} onScroll={handleSwipeScroll}>
+        {/* Page 1 — Overview dashboard */}
+        <section className="swipe-page">
+          <div className="fridge-content">
+            <InventoryPreview
+              items={items}
+              totalCount={items.length}
+              onViewAll={() => goToPage(1)}
+            />
 
-        <div className="category-section">
-          <div className="category-section-title">Filter Inventory by Category</div>
-          <CategoryGrid
-            categories={CATEGORIES}
-            categoryCounts={categories}
-            onCategoryClick={handleCategoryClick}
-          />
-        </div>
+            <LocationGrid
+              locationCounts={getLocationCounts()}
+              onLocationClick={handleLocationClick}
+            />
+
+            <div className="category-section">
+              <div className="category-section-title">Filter Inventory by Category</div>
+              <CategoryGrid
+                categories={CATEGORIES}
+                categoryCounts={categories}
+                onCategoryClick={handleCategoryClick}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Page 2 — Full inventory list, grouped by expiration */}
+        <section className="swipe-page">
+          <div className="fridge-content">
+            <InventoryList items={items} onChanged={loadData} />
+          </div>
+        </section>
       </div>
 
       <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
