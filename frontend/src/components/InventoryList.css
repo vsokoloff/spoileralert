@@ -32,7 +32,7 @@
   flex: 0 0 auto;
   padding: 7px 14px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 7px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   font-size: 13px;
@@ -78,7 +78,7 @@
   font-size: 12px;
   font-weight: 700;
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 5px;
 }
 
 /* ── Item rows ───────────────────────────────────────────────────────────── */
@@ -88,7 +88,7 @@
   gap: 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 12px 14px;
 }
 
@@ -134,7 +134,7 @@
   font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 5px;
 }
 
 .inv-qty {
@@ -186,7 +186,7 @@
   padding: 14px;
   margin-top: 4px;
   border: 1px dashed var(--border);
-  border-radius: 14px;
+  border-radius: 8px;
   background: transparent;
   color: var(--accent);
   font-size: 15px;

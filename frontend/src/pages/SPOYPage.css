@@ -143,7 +143,7 @@
 /* Bubble */
 .message-content {
   padding: 10px 14px;
-  border-radius: 18px;
+  border-radius: 10px;
   font-size: 14px;
   line-height: 1.55;
   word-break: break-word;
@@ -218,7 +218,7 @@
 .suggestion-chip {
   white-space: nowrap;
   padding: 7px 14px;
-  border-radius: 20px;
+  border-radius: 10px;
   /* Dark Forest Green */
   border: 1px solid #166534;
   background: transparent;

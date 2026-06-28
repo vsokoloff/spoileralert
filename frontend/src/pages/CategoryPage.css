@@ -111,7 +111,7 @@
 
 .chip {
   padding: 5px 12px;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-primary);
   color: var(--text-secondary);
@@ -224,7 +224,7 @@
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 12px 24px;
   font-size: 16px;
   font-weight: 600;
@@ -240,7 +240,7 @@
 
 .item-card {
   background: var(--bg-card);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 16px;
   border: 1px solid var(--border);
   display: flex;
@@ -366,7 +366,7 @@
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 14px 22px;
   font-size: 15px;
   font-weight: 600;

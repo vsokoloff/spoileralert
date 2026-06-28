@@ -43,7 +43,7 @@
 /* ── Master Toggle ── */
 .master-toggle-card {
   background: var(--bg-card);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 16px;
   border: 1px solid var(--border);
   display: flex;
@@ -97,7 +97,7 @@
 
 .section-card {
   background: var(--bg-card);
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   overflow: hidden;
 }
@@ -148,7 +148,7 @@
 .toggle {
   width: 48px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: var(--border);
   border: none;
   cursor: pointer;
@@ -219,7 +219,7 @@
 
 .time-chip {
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-primary);
   color: var(--text-secondary);
@@ -239,7 +239,7 @@
 /* ── Notification Preview ── */
 .notif-preview {
   background: var(--bg-primary);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 12px 14px;
   margin: 12px 12px 0;
   border: 1px solid var(--border);
@@ -288,7 +288,7 @@
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 14px;
+  border-radius: 8px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;

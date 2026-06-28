@@ -99,7 +99,7 @@
   width: 64px;
   height: 64px;
   background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border-radius: 20px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,7 +205,7 @@
   align-items: center;
   gap: 4px;
   padding: 10px 18px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

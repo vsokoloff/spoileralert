@@ -32,14 +32,27 @@ export function getStatusText(expirationDate) {
 }
 
 // ── Category colors (customizable per user) ──────────────────────────────────
+// Bold "fridge magnet" palette used as solid tile fills.
 export const DEFAULT_CATEGORY_COLORS = {
-  'Produce':      '#10b981',
-  'Meat':         '#ef4444',
-  'Eggs & Dairy': '#f59e0b',
-  'Pantry':       '#facc15',
-  'Deli':         '#8b5cf6',
-  'Freezer':      '#3b82f6',
-  'Leftovers':    '#ec4899',
+  'Produce':      '#2fa64b',
+  'Meat':         '#e5484d',
+  'Eggs & Dairy': '#eba300',
+  'Pantry':       '#f08c00',
+  'Deli':         '#7c5cff',
+  'Freezer':      '#2e9bd6',
+  'Leftovers':    '#e64980',
+}
+
+// Pick readable text (dark or white) for a given solid background color.
+export function getContrastText(hex) {
+  if (!hex) return '#ffffff'
+  const h = hex.replace('#', '')
+  if (h.length < 6) return '#ffffff'
+  const r = parseInt(h.substr(0, 2), 16)
+  const g = parseInt(h.substr(2, 2), 16)
+  const b = parseInt(h.substr(4, 2), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.58 ? '#1a1a1a' : '#ffffff'
 }
 
 export const CATEGORY_NAMES = Object.keys(DEFAULT_CATEGORY_COLORS)

@@ -48,7 +48,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: var(--bg-primary);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 4px;
   margin-bottom: 24px;
   gap: 4px;
@@ -128,7 +128,7 @@
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;

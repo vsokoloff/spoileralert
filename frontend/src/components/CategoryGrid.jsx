@@ -1,3 +1,4 @@
+import { getContrastText } from '../utils/colors'
 import './CategoryGrid.css'
 
 function CategoryGrid({ categories, categoryCounts, onCategoryClick }) {
@@ -16,8 +17,9 @@ function CategoryGrid({ categories, categoryCounts, onCategoryClick }) {
             className="category-tile"
             onClick={() => onCategoryClick(category.name)}
             style={{
-              backgroundColor: `${category.color}15`,
-              borderColor: category.color
+              backgroundColor: category.color,
+              borderColor: category.color,
+              color: getContrastText(category.color),
             }}
           >
             <div className="category-name">{category.name}</div>

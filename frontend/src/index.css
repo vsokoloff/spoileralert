@@ -5,44 +5,36 @@
 }
 
 :root {
-  /* Default Dark Mode Colors */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2a2a2a;
-  --bg-card: #2d2d2d;
-  --bg-hover: #3a3a3a;
-  --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --accent: #4a9eff;
-  --accent-hover: #5baaff;
-  --border: #404040;
-  --shadow: rgba(0, 0, 0, 0.3);
-  
-  /* Category colors */
-  --produce: #4ade80;
-  --freezer: #60a5fa;
-  --meat: #f87171;
-  --grains: #fbbf24;
-  --deli: #a78bfa;
-  --eggs-dairy: #fbbf24;
-  --leftovers: #94a3b8;
-  
+  /* Dark mode — produce-green grounded, vibrant */
+  --bg-primary: #141c17;
+  --bg-secondary: #1b241e;
+  --bg-card: #1b241e;
+  --bg-hover: #243029;
+  --text-primary: #eaf5ec;
+  --text-secondary: #8fb89a;
+  --accent: #34c759;
+  --accent-hover: #2fb350;
+  --border: #2c3a30;
+  --shadow: rgba(0, 0, 0, 0.35);
+
   /* Status colors */
   --red: #ef4444;
   --yellow: #fbbf24;
   --green: #22c55e;
   --blue: #3b82f6;
-  --black: #1a1a1a;
 }
 
-/* NEW: Light Mode Overrides */
+/* Light mode — warm "fridge door" cream, produce green */
 [data-theme='light'] {
-  --bg-primary: #f8fafc;
+  --bg-primary: #fbf6e9;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --bg-hover: #f1f5f9;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
+  --bg-hover: #f1ecdc;
+  --text-primary: #1e3326;
+  --text-secondary: #5c7a63;
+  --accent: #2f9e44;
+  --accent-hover: #2a8c3d;
+  --border: #e7dfc9;
   --shadow: rgba(0, 0, 0, 0.08);
 }
 

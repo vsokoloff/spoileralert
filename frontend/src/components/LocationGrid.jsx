@@ -1,9 +1,10 @@
+import { getContrastText } from '../utils/colors'
 import './LocationGrid.css'
 
 const LOCATIONS = [
-  { name: 'Fridge', color: '#60a5fa' },
-  { name: 'Freezer', color: '#3b82f6' },
-  { name: 'Pantry', color: '#fbbf24' },
+  { name: 'Fridge', color: '#2e9bd6' },
+  { name: 'Freezer', color: '#5b7cfa' },
+  { name: 'Pantry', color: '#f08c00' },
 ]
 
 function LocationGrid({ locationCounts, onLocationClick }) {
@@ -22,8 +23,9 @@ function LocationGrid({ locationCounts, onLocationClick }) {
             className="location-tile"
             onClick={() => onLocationClick(location.name.toLowerCase())}
             style={{
-              backgroundColor: `${location.color}15`,
-              borderColor: location.color
+              backgroundColor: location.color,
+              borderColor: location.color,
+              color: getContrastText(location.color),
             }}
           >
             <div className="location-name">{location.name}</div>
