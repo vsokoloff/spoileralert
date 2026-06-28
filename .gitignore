@@ -36,3 +36,7 @@ npm-debug.log*
 # Google credentials
 *-credentials.json
 google-credentials.json
+
+# Stray non-project files
+NYC_Apartment_Options_Updated.xlsx
+*.xlsx
