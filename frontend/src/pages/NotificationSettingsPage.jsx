@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Bell, Clock, Zap, ShoppingCart, ChefHat, AlertTriangle, Ban, Users } from 'lucide-react'
+import { ArrowLeft, Bell, Clock, Zap, ShoppingCart, ChefHat, AlertTriangle, Ban, Users, Trash2 } from 'lucide-react'
+import { deleteAccount, logout } from '../api/auth'
 import './NotificationSettingsPage.css'
 
 const DIGEST_TIMES = ['8:00 AM', '9:00 AM', '10:00 AM', '12:00 PM', '6:00 PM', '8:00 PM']
@@ -63,12 +64,30 @@ function NotificationSettingsPage() {
 
   const set = (key) => (val) => setSettings(prev => ({ ...prev, [key]: val }))
 
+  const [deleting, setDeleting] = useState(false)
+
   const handleSave = () => {
     // In a real app, persist to backend/localStorage
     const prefs = { settings, urgencyDays, digestEnabled, digestTime }
     localStorage.setItem('notifSettings', JSON.stringify(prefs))
     alert('Notification preferences saved!')
     navigate(-1)
+  }
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Delete your account?\n\nThis permanently removes your account and all your food items, notifications, and history. This cannot be undone.'
+    )
+    if (!confirmed) return
+    setDeleting(true)
+    try {
+      await deleteAccount()
+      logout() // clears token + redirects to /login
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      alert('Could not delete your account. Please try again.')
+      setDeleting(false)
+    }
   }
 
   return (
@@ -225,6 +244,24 @@ function NotificationSettingsPage() {
               </div>
               <p className="preview-title">Daily digest — 3 items expiring soon</p>
               <p className="preview-body">Blueberries (1d), Chicken Breast (2d), Greek Yogurt (3d). Tap to manage.</p>
+            </div>
+          </Section>
+
+          {/* Account */}
+          <Section title="ACCOUNT">
+            <div className="account-row">
+              <div className="account-text">
+                <p className="account-title">Delete account</p>
+                <p className="account-subtitle">Permanently remove your account and all your data. This can&apos;t be undone.</p>
+              </div>
+              <button
+                className="delete-account-btn"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                <Trash2 size={16} />
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
             </div>
           </Section>
 

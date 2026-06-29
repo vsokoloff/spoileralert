@@ -94,3 +94,28 @@ def update_category_colors(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+# ── Delete account ───────────────────────────────────────────────────────────────
+
+@router.delete("/me", status_code=status.HTTP_200_OK)
+def delete_account(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Permanently delete the current user's account and all of their data.
+
+    Required by the App Store for any app that supports account creation.
+    """
+    uid = current_user.id
+    # Remove all data owned by or referencing this user.
+    db.query(models.Notification).filter(models.Notification.user_id == uid).delete(synchronize_session=False)
+    db.query(models.SPOYConversation).filter(models.SPOYConversation.user_id == uid).delete(synchronize_session=False)
+    db.query(models.DeletedItem).filter(models.DeletedItem.user_id == uid).delete(synchronize_session=False)
+    db.query(models.Item).filter(models.Item.user_id == uid).delete(synchronize_session=False)
+    db.query(models.Roommate).filter(
+        (models.Roommate.user_id == uid) | (models.Roommate.roommate_id == uid)
+    ).delete(synchronize_session=False)
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account deleted"}
