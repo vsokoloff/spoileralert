@@ -24,7 +24,16 @@ from app.database import get_db
 from app import models
 
 # ── Config ────────────────────────────────────────────────────────────────────
-SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production-please")
+_DEFAULT_SECRET = "change-me-in-production-please"
+SECRET_KEY = os.getenv("SECRET_KEY", _DEFAULT_SECRET)
+
+# Fail closed: never run in production with the default (forgeable) secret.
+if os.getenv("ENVIRONMENT", "").lower() == "production" and SECRET_KEY == _DEFAULT_SECRET:
+    raise RuntimeError(
+        "SECRET_KEY must be set in production. Refusing to start with the default "
+        "value, which would let anyone forge login tokens."
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 10080))  # 7 days
 

@@ -203,12 +203,11 @@ def scan_receipt_with_gemini(image_base64: str) -> List[dict]:
 def test_receipt_endpoint(
     current_user: models.User = Depends(get_current_user),
 ):
-    """Check whether Gemini API key is configured."""
+    """Check whether the Gemini API key is configured (without revealing it)."""
     api_key = os.getenv("GEMINI_API_KEY")
     return {
         "status": "ok",
         "gemini_api_key_set": bool(api_key),
-        "gemini_api_key_preview": f"{api_key[:8]}..." if api_key else "NOT SET",
     }
 
 
