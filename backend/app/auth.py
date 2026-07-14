@@ -27,11 +27,16 @@ from app import models
 _DEFAULT_SECRET = "change-me-in-production-please"
 SECRET_KEY = os.getenv("SECRET_KEY", _DEFAULT_SECRET)
 
-# Fail closed: never run in production with the default (forgeable) secret.
-if os.getenv("ENVIRONMENT", "").lower() == "production" and SECRET_KEY == _DEFAULT_SECRET:
+# Fail closed: never run with the default (forgeable) secret unless explicitly
+# in a local development/test environment. Hosts often don't set ENVIRONMENT,
+# so we refuse to start by default rather than only when ENVIRONMENT=production.
+_DEV_ENVIRONMENTS = {"development", "dev", "local", "test"}
+if SECRET_KEY == _DEFAULT_SECRET and os.getenv("ENVIRONMENT", "").lower() not in _DEV_ENVIRONMENTS:
     raise RuntimeError(
-        "SECRET_KEY must be set in production. Refusing to start with the default "
-        "value, which would let anyone forge login tokens."
+        "SECRET_KEY is not set. Refusing to start with the default value, which "
+        "would let anyone forge login tokens. Set SECRET_KEY in your .env "
+        "(generate one with: python -c \"import secrets; print(secrets.token_hex(32))\") "
+        "or set ENVIRONMENT=development for local work."
     )
 
 ALGORITHM = "HS256"

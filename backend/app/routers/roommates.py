@@ -2,18 +2,23 @@
 backend/app/routers/roommates.py
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
 from app.auth import get_current_user
+from app.limiter import limiter
 
 router = APIRouter()
 
 
+# Rate-limited: this endpoint necessarily reveals whether an email has an
+# account, so throttle it to make bulk email enumeration impractical.
 @router.post("/add")
+@limiter.limit("15/hour")
 def add_roommate(
+    request: Request,
     roommate_email: str,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),

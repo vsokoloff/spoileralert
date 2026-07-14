@@ -6,9 +6,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import inspect, text
 
 from app.database import engine, Base
+from app.limiter import limiter
 from app.routers import items, categories, receipt, spoy, users, notifications, roommates
 
 Base.metadata.create_all(bind=engine)
@@ -34,6 +37,11 @@ def _ensure_schema():
 _ensure_schema()
 
 app = FastAPI(title="Spoiler Alert API", version="1.0.0")
+
+# ── Rate limiting (slowapi) ────────────────────────────────────────────────────
+# Limits are applied per-route (see routers/users.py for login/register).
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
 # Always allow localhost for development.

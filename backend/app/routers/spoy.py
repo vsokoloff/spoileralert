@@ -26,7 +26,9 @@ from app.database import get_db
 
 router = APIRouter()
 
-GEMINI_MODEL = "gemini-1.5-flash"
+# gemini-1.5-flash was retired by Google in Sept 2025. Default to 2.5-flash and
+# allow overriding via env so future model changes don't require a code change.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 # ── Gemini setup ───────────────────────────────────────────────────────────────

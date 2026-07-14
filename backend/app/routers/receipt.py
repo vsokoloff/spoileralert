@@ -28,7 +28,9 @@ from app.expiration_db import (
 
 router = APIRouter()
 
-GEMINI_MODEL = "gemini-1.5-flash"
+# gemini-1.5-flash was retired by Google in Sept 2025. Default to 2.5-flash and
+# allow overriding via env so future model changes don't require a code change.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 # ── Category normalization ─────────────────────────────────────────────────────
 
@@ -142,30 +144,39 @@ Counter fruits (bananas, avocados, tomatoes, onions) → pantry
 Only include food items. Return valid JSON only, no markdown."""
 
 
+# ~10 MB of decoded image data (base64 inflates by ~4/3). Prevents a single
+# request from exhausting server memory.
+MAX_IMAGE_BASE64_CHARS = 14_000_000
+
+
 def scan_receipt_with_gemini(image_base64: str) -> List[dict]:
     """Use Gemini Vision to scan receipt and extract food items."""
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
-        print("[receipt] GEMINI_API_KEY not set — returning mock data.")
-        return [
-            {"name": "Milk", "generic_name": "milk", "quantity": 1, "category": "Eggs & Dairy", "location": "fridge"},
-            {"name": "Eggs", "generic_name": "eggs", "quantity": 1, "category": "Eggs & Dairy", "location": "fridge"},
-        ]
+        # Fail loudly instead of silently returning fake items — a misconfigured
+        # production deploy should be obvious, not masked by mock data.
+        raise HTTPException(
+            status_code=503,
+            detail="Receipt scanning is not configured on the server (GEMINI_API_KEY missing).",
+        )
 
     if not image_base64 or len(image_base64) < 100:
         raise ValueError("Image data appears invalid or too short.")
 
+    if len(image_base64) > MAX_IMAGE_BASE64_CHARS:
+        raise HTTPException(
+            status_code=413,
+            detail="Receipt image is too large. Please use an image under 10 MB.",
+        )
+
     client = genai.Client(api_key=api_key)
 
-    image_part = types.Part.from_bytes(
-        data=bytes(image_base64, "utf-8") if isinstance(image_base64, str) else image_base64,
-        mime_type="image/jpeg",
-    )
-
-    # Decode base64 properly
     import base64
-    image_bytes = base64.b64decode(image_base64)
+    try:
+        image_bytes = base64.b64decode(image_base64)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 image data.")
     image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
 
     content = ""
@@ -247,6 +258,8 @@ def scan_receipt(
 
         return schemas.ReceiptScanResponse(items=items[:20], confidence=0.95)
 
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error scanning receipt: {type(e).__name__}: {e}")

@@ -7,7 +7,7 @@ Endpoints:
   GET  /api/users/me         — returns current user (requires token)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -18,6 +18,7 @@ from app.auth import (
     create_access_token,
     get_current_user,
 )
+from app.limiter import limiter
 
 router = APIRouter()
 
@@ -25,7 +26,8 @@ router = APIRouter()
 # ── Register ───────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=schemas.TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def register(request: Request, user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     """Create a new account and return an access token immediately."""
     existing = db.query(models.User).filter(models.User.email == user_in.email).first()
     if existing:
@@ -53,7 +55,8 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
 # ── Login ──────────────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=schemas.TokenResponse)
-def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
     """Exchange email + password for a JWT access token."""
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
 
