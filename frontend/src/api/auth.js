@@ -38,7 +38,9 @@ export const saveAuth = (tokenResponse) => {
 export const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
-  window.location.href = '/login'
+  // Hash navigation — works with HashRouter inside the Capacitor webview,
+  // where a hard redirect to a bare path can 404 (no server rewrites).
+  window.location.hash = '#/login'
 }
 
 export const getUser = () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getItem, updateItem } from '../api/items'
@@ -21,11 +21,7 @@ function EditItemPage() {
     shared_with: '', // FIX: added missing field
   })
 
-  useEffect(() => {
-    loadItem()
-  }, [id])
-
-  const loadItem = async () => {
+  const loadItem = useCallback(async () => {
     try {
       const item = await getItem(id)
       const expDate = item.expiration_date ? new Date(item.expiration_date).toISOString().split('T')[0] : ''
@@ -47,7 +43,11 @@ function EditItemPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id, navigate])
+
+  useEffect(() => {
+    loadItem()
+  }, [loadItem])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target

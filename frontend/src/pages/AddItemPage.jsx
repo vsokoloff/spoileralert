@@ -205,29 +205,37 @@ function AddItemPage() {
       input.capture = 'environment'
       input.onchange = async (e) => {
         const file = e.target.files[0]
-        if (file) {
-          const reader = new FileReader()
-          reader.onload = async (event) => {
-            const base64 = event.target.result.split(',')[1]
-            try {
-              const result = await scanReceipt(base64)
-              // Ensure scanned items default to Auto-detect if AI didn't catch it
-              const mappedItems = result.items.map(item => ({
-                ...item,
-                category: item.category || 'Auto-detect'
-              }))
-              setScannedItems(mappedItems)
-              setMode('review')
-            } catch (error) {
-              console.error('Error:', error)
-              alert('Error scanning receipt.')
-            } finally {
-              setScanning(false)
-            }
-          }
-          reader.readAsDataURL(file)
+        if (!file) {
+          // Picker closed without a selection — don't leave the spinner running.
+          setScanning(false)
+          return
         }
+        const reader = new FileReader()
+        reader.onerror = () => setScanning(false)
+        reader.onload = async (event) => {
+          const base64 = event.target.result.split(',')[1]
+          try {
+            const result = await scanReceipt(base64)
+            // Ensure scanned items default to Auto-detect if AI didn't catch it
+            const mappedItems = result.items.map(item => ({
+              ...item,
+              category: item.category || 'Auto-detect'
+            }))
+            setScannedItems(mappedItems)
+            setMode('review')
+          } catch (error) {
+            console.error('Error:', error)
+            const detail = error.response?.data?.detail
+            alert(detail || 'Error scanning receipt.')
+          } finally {
+            setScanning(false)
+          }
+        }
+        reader.readAsDataURL(file)
       }
+      // Fired when the user dismisses the camera/picker without choosing a
+      // file (supported in iOS 16.4+ / modern WebKit) — clear the spinner.
+      input.oncancel = () => setScanning(false)
       input.click()
     } catch (error) {
       setScanning(false)

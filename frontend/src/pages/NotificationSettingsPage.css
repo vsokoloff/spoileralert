@@ -343,3 +343,40 @@
   opacity: 0.85;
   transform: scale(0.98);
 }
+
+/* ── Notifications feed (NotificationsPage) ─────────────────────────────── */
+.notif-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border, rgba(128,128,128,0.15));
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item.read { opacity: 0.55; }
+.notif-message { flex: 1; margin: 0; font-size: 14px; line-height: 1.4; }
+.notif-actions { display: flex; gap: 6px; }
+.notif-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #888);
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.notif-action-btn:hover { color: var(--accent, #4a9eff); }
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 16px;
+  color: var(--text-secondary, #888);
+  text-align: center;
+}
+
+/* Restore button (Recently Deleted) */
+.notif-action-btn { gap: 5px; font-size: 13px; }
+.notif-action-btn:disabled { opacity: 0.5; cursor: default; }

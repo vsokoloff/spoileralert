@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Plus, Edit, Trash2, CheckSquare, Square, SlidersHorizontal, X } from 'lucide-react'
 import { getItems } from '../api/items'
 import { getItemsByCategory } from '../api/categories'
@@ -74,21 +74,16 @@ function CategoryPage() {
 
   const isAllPage = category === 'all'
 
-  useEffect(() => {
-    loadItems()
-  }, [category])
+  // useLocation().search works under HashRouter (window.location.search does
+  // not — query params live inside the hash fragment).
+  const { search } = useLocation()
 
-  // Reset selection when leaving select mode
-  useEffect(() => {
-    if (!selectMode) setSelectedIds(new Set())
-  }, [selectMode])
-
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setLoading(true)
     try {
       let data
       if (category === 'all') {
-        const urlParams = new URLSearchParams(window.location.search)
+        const urlParams = new URLSearchParams(search)
         const location = urlParams.get('location')
         data = location ? await getItems({ location }) : await getItems()
       } else {
@@ -100,7 +95,16 @@ function CategoryPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [category, search])
+
+  useEffect(() => {
+    loadItems()
+  }, [loadItems])
+
+  // Reset selection when leaving select mode
+  useEffect(() => {
+    if (!selectMode) setSelectedIds(new Set())
+  }, [selectMode])
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
@@ -152,7 +156,7 @@ function CategoryPage() {
 
   const getPageTitle = () => {
     if (category === 'all') {
-      const loc = new URLSearchParams(window.location.search).get('location')
+      const loc = new URLSearchParams(search).get('location')
       if (loc) return loc.charAt(0).toUpperCase() + loc.slice(1)
       return 'All Items'
     }

@@ -4,6 +4,9 @@ import { HelpCircle, Bell, Sun, Moon, LogOut, Palette } from 'lucide-react'
 import { getItems } from '../api/items'
 import { getCategories } from '../api/categories'
 import { logout, getUser } from '../api/auth'
+import { getNotifications } from '../api/notifications'
+import { getNotifSettings } from '../utils/notifSettings'
+import { rescheduleAll } from '../utils/localNotifications'
 import { CATEGORY_NAMES, getCategoryColor } from '../utils/colors'
 import LocationGrid from '../components/LocationGrid'
 import CategoryGrid from '../components/CategoryGrid'
@@ -20,6 +23,7 @@ function FridgePage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
   const [page, setPage] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
   const swipeRef = useRef(null)
   const navigate = useNavigate()
 
@@ -55,6 +59,19 @@ function FridgePage() {
       ])
       setItems(itemsData || [])
       setCategories(categoriesData || [])
+
+      // Unread alert badge (respects notification settings).
+      const s = getNotifSettings()
+      if (s.masterEnabled && (s.expirationAlerts || s.expiredAlerts)) {
+        getNotifications(true, s.urgencyDays, s.expiredAlerts)
+          .then(unread => setUnreadCount((unread || []).length))
+          .catch(() => {})
+      }
+
+      // Keep device notifications in sync with the latest inventory. The
+      // fridge page is the landing page after any add/edit/delete, so this
+      // keeps schedules fresh without hooking every mutation.
+      rescheduleAll(itemsData || []).catch(() => {})
     } catch (error) {
       console.error('Error loading data:', error)
       setItems([])
@@ -121,11 +138,12 @@ function FridgePage() {
             <Palette size={20} />
           </button>
           <button
-            className="header-icon-btn"
-            onClick={() => navigate('/notifications/settings')}
-            title="Notification settings"
+            className="header-icon-btn notif-bell-btn"
+            onClick={() => navigate('/notifications')}
+            title="Notifications"
           >
             <Bell size={20} />
+            {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
           </button>
           <button
             className="header-icon-btn"

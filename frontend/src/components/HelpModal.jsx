@@ -69,8 +69,8 @@ const STEPS = [
     icon: <Trash2 size={32} />,
     title: 'Undo Deletes',
     subtitle: 'Accidentally deleted something?',
-    body: 'Every deleted item is saved for a short window. Go to Settings → Recently Deleted to restore anything you removed by mistake.',
-    tip: 'Tip:Items are kept for 24 hours before being permanently removed.',
+    body: 'Every deleted item is saved for a short window. Tap the bell, then the settings gear, and scroll to Recently Deleted to restore anything you removed by mistake.',
+    tip: 'Tip: Items are kept for 24 hours before being permanently removed.',
   },
 ]
 

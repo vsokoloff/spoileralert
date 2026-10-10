@@ -1,7 +1,9 @@
 import client from './client'
 
-export const getNotifications = async (unreadOnly = false) => {
-  const response = await client.get(`/api/notifications?unread_only=${unreadOnly}`)
+export const getNotifications = async (unreadOnly = false, days = 1, includeExpired = false) => {
+  const response = await client.get(
+    `/api/notifications?unread_only=${unreadOnly}&days=${days}&include_expired=${includeExpired}`
+  )
   return response.data
 }
 

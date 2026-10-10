@@ -6,7 +6,7 @@ The authenticated user's ID replaces the old DEFAULT_USER_ID = 1.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -66,7 +66,18 @@ def get_recently_deleted(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Return up to 10 recently deleted items for the current user."""
+    """Return up to 10 recently deleted items (last 24 hours) for the user.
+
+    Also purges entries older than 24 hours, matching the retention window
+    promised in the app's help tutorial.
+    """
+    cutoff = datetime.now() - timedelta(hours=24)
+    db.query(models.DeletedItem).filter(
+        models.DeletedItem.user_id == current_user.id,
+        models.DeletedItem.deleted_at < cutoff,
+    ).delete(synchronize_session=False)
+    db.commit()
+
     deleted = (
         db.query(models.DeletedItem)
         .filter(models.DeletedItem.user_id == current_user.id)
