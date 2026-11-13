@@ -1,5 +1,10 @@
 import client from './client'
 
+export const parseReceiptText = async (text) => {
+  const response = await client.post('/api/receipt/parse-text', { text })
+  return response.data
+}
+
 export const scanReceipt = async (imageBase64) => {
   const response = await client.post('/api/receipt/scan', {
     image_base64: imageBase64

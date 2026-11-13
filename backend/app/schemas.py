@@ -128,6 +128,11 @@ class ReceiptScanRequest(BaseModel):
     image_base64: str = Field(..., max_length=5_000_000)  # ~3.7 MB image limit
 
 
+class ReceiptTextRequest(BaseModel):
+    """Raw OCR text from on-device receipt scanning (Tesseract in the app)."""
+    text: str = Field(..., max_length=20_000)
+
+
 class ReceiptItem(BaseModel):
     name: str
     quantity: float = 1.0

@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Camera, FileText, Trash2 } from 'lucide-react'
 import { createItem } from '../api/items'
-import { scanReceipt, confirmReceiptItems } from '../api/receipt'
+import { scanReceipt, parseReceiptText, confirmReceiptItems } from '../api/receipt'
+import { recognizeReceiptText } from '../utils/receiptOcr'
 import './AddItemPage.css'
 
 // 1. ADDED 'Auto-detect' to the top of the list
@@ -213,9 +214,22 @@ function AddItemPage() {
         const reader = new FileReader()
         reader.onerror = () => setScanning(false)
         reader.onload = async (event) => {
-          const base64 = event.target.result.split(',')[1]
+          const dataUrl = event.target.result
+          const base64 = dataUrl.split(',')[1]
           try {
-            const result = await scanReceipt(base64)
+            // Privacy-first: OCR the receipt on-device (Tesseract) and send
+            // only the text to our own backend for parsing. Fall back to the
+            // server-side AI scan only if local OCR finds nothing.
+            let result = null
+            try {
+              const text = await recognizeReceiptText(dataUrl)
+              if (text.trim()) result = await parseReceiptText(text)
+            } catch (ocrError) {
+              console.warn('On-device OCR failed, falling back to AI scan:', ocrError)
+            }
+            if (!result || result.items.length === 0) {
+              result = await scanReceipt(base64)
+            }
             // Ensure scanned items default to Auto-detect if AI didn't catch it
             const mappedItems = result.items.map(item => ({
               ...item,

@@ -7,6 +7,7 @@ Auth is required for all endpoints.
 
 import json
 import os
+import re
 import traceback
 from datetime import datetime, timedelta
 from typing import List
@@ -263,6 +264,70 @@ def scan_receipt(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error scanning receipt: {type(e).__name__}: {e}")
+
+
+# ── On-device OCR text parsing (no AI service) ────────────────────────────────
+# The app OCRs the receipt locally (Tesseract.js) and sends only the text here.
+# We match lines against the shelf-life database to find food items.
+
+_PRICE_RE = re.compile(r"\$?\d+[.,]\d{2}\b")
+_QTY_PREFIX_RE = re.compile(r"^\d+\s*[xX@]?\s+")
+_NON_FOOD_WORDS = {
+    "total", "subtotal", "tax", "balance", "change", "cash", "credit", "debit",
+    "visa", "mastercard", "amex", "payment", "tender", "savings", "coupon",
+    "discount", "member", "loyalty", "rewards", "points", "store", "thank",
+    "receipt", "order", "cashier", "register", "lane", "transaction", "refund",
+    "card", "approved", "auth", "phone", "www", ".com", "street", "ave",
+}
+
+_FREEZER_LOCATION = {models.CategoryType.FREEZER: models.LocationType.FREEZER,
+                     models.CategoryType.PANTRY: models.LocationType.PANTRY}
+
+
+@router.post("/parse-text", response_model=schemas.ReceiptScanResponse)
+def parse_receipt_text(
+    request: schemas.ReceiptTextRequest,
+    current_user: models.User = Depends(get_current_user),
+):
+    """Turn raw OCR receipt text into food items using the shelf-life database."""
+    items = []
+    seen = set()
+
+    for raw_line in request.text.splitlines():
+        line = raw_line.strip()
+        if len(line) < 3:
+            continue
+        low = line.lower()
+        if any(w in low for w in _NON_FOOD_WORDS):
+            continue
+
+        cleaned = _PRICE_RE.sub("", line)
+        cleaned = _QTY_PREFIX_RE.sub("", cleaned).strip(" -.*#:")
+        if len(cleaned) < 3:
+            continue
+
+        # Match against known foods (longest keyword first, so "chicken breast"
+        # wins over "chicken").
+        normalized = _normalize_name(cleaned)
+        haystack = f"{normalized} {cleaned.lower()}"
+        matched = None
+        for key in sorted(EXPIRATION_DATABASE, key=len, reverse=True):
+            if key in haystack:
+                matched = key
+                break
+        if not matched or matched in seen:
+            continue
+        seen.add(matched)
+
+        category = categorize_item(matched)
+        items.append(schemas.ReceiptItem(
+            name=matched.title(),
+            quantity=1.0,
+            category=category,
+            location=_FREEZER_LOCATION.get(category, models.LocationType.FRIDGE),
+        ))
+
+    return schemas.ReceiptScanResponse(items=items[:20], confidence=0.6)
 
 
 @router.post("/scan/confirm")
