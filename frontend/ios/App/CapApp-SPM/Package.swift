@@ -20,7 +20,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
-                .product(name: "LocalNotificationsPlugin", package: "CapacitorLocalNotifications")
+                .product(name: "CapacitorLocalNotifications", package: "CapacitorLocalNotifications")
             ]
         )
     ]
